@@ -2,9 +2,11 @@ package com.project.knit.dto.req;
 
 import com.project.knit.domain.entity.Category;
 import com.project.knit.domain.entity.Content;
-import com.project.knit.domain.entity.ThreadReference;
+import com.project.knit.domain.entity.Reference;
 import com.project.knit.domain.entity.Tag;
-import lombok.*;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -19,5 +21,5 @@ public class ThreadCreateReqDto {
     private List<Content> contentList;
     private List<Tag> tagList;
     private List<Category> categoryList;
-    private List<ThreadReference> threadReferenceList;
+    private List<Reference> referenceList;
 }

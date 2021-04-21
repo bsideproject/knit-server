@@ -10,6 +10,6 @@ public class WebConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("https://knitwiki.com", "http://local.knitwiki.com:3000");
+                .allowedOrigins("https://knitwiki.com", "http://local.knitwiki.com:3000", "https://www.knitwiki.com", "http://localhost:3000", "localhost:3000");
     }
 }

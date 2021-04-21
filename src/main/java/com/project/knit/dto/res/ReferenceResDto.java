@@ -7,7 +7,8 @@ import lombok.Setter;
 @Setter
 @Getter
 @NoArgsConstructor
-public class TagResDto {
-    private Long tagId;
-    private String tag;
+public class ReferenceResDto {
+    private Long referenceId;
+    private String referenceLink;
+    private String referenceDescription;
 }

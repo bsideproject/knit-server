@@ -2,9 +2,11 @@ package com.project.knit.dto.req;
 
 import com.project.knit.domain.entity.Category;
 import com.project.knit.domain.entity.Content;
-import com.project.knit.domain.entity.ThreadReference;
 import com.project.knit.domain.entity.Tag;
-import lombok.*;
+import com.project.knit.domain.entity.ThreadReference;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.List;
 

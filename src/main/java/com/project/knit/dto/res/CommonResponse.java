@@ -1,7 +1,8 @@
 package com.project.knit.dto.res;
 
-import lombok.*;
-import org.springframework.web.bind.annotation.GetMapping;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Getter
 @Setter

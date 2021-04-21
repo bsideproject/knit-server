@@ -2,26 +2,23 @@ package com.project.knit.service;
 
 import com.project.knit.domain.entity.Category;
 import com.project.knit.domain.entity.Content;
-import com.project.knit.domain.entity.ThreadReference;
+import com.project.knit.domain.entity.Reference;
 import com.project.knit.domain.entity.Tag;
 import com.project.knit.domain.entity.Thread;
 import com.project.knit.domain.repository.CategoryRepository;
 import com.project.knit.domain.repository.ContentRepository;
+import com.project.knit.domain.repository.ReferenceRepository;
 import com.project.knit.domain.repository.TagRepository;
-import com.project.knit.domain.repository.ThreadReferenceRepository;
 import com.project.knit.domain.repository.ThreadRepository;
 import com.project.knit.dto.req.ThreadCreateReqDto;
-import com.project.knit.dto.req.ThreadUpdateReqDto;
 import com.project.knit.dto.res.CategoryResDto;
 import com.project.knit.dto.res.CommonResponse;
 import com.project.knit.dto.res.ContentResDto;
-import com.project.knit.dto.res.ThreadReferenceResDto;
+import com.project.knit.dto.res.ReferenceResDto;
 import com.project.knit.dto.res.TagResDto;
 import com.project.knit.dto.res.ThreadAdminResDto;
-import com.project.knit.dto.res.ThreadCreateResDto;
 import com.project.knit.dto.res.ThreadListResDto;
 import com.project.knit.dto.res.ThreadResDto;
-import com.project.knit.utils.enums.ThreadStatus;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -37,7 +34,7 @@ public class ThreadService {
     private final ContentRepository contentRepository;
     private final TagRepository tagRepository;
     private final CategoryRepository categoryRepository;
-    private final ThreadReferenceRepository threadReferenceRepository;
+    private final ReferenceRepository referenceRepository;
 
     private final S3Service s3Service;
     private final AdminService adminService;
@@ -62,12 +59,12 @@ public class ThreadService {
         List<Content> contentList = contentRepository.findAllByThreadId(threadId);
         List<Category> categoryList = categoryRepository.findAllByThreadId(threadId);
         List<Tag> tagList = tagRepository.findAllByThreadId(threadId);
-        List<ThreadReference> threadReferenceList = threadReferenceRepository.findAllByThreadId(threadId);
+        List<Reference> referenceList = referenceRepository.findAllByThreadId(threadId);
 
         List<ContentResDto> contentResList = new ArrayList<>();
         List<CategoryResDto> categoryResList = new ArrayList<>();
         List<TagResDto> tagResList = new ArrayList<>();
-        List<ThreadReferenceResDto> threadReferenceResList = new ArrayList<>();
+        List<ReferenceResDto> referenceResList = new ArrayList<>();
 
         for (Content c : contentList) {
             ContentResDto res = new ContentResDto();
@@ -92,19 +89,19 @@ public class ThreadService {
 
             tagResList.add(res);
         }
-        for (ThreadReference r : threadReferenceList) {
-            ThreadReferenceResDto res = new ThreadReferenceResDto();
+        for (Reference r : referenceList) {
+            ReferenceResDto res = new ReferenceResDto();
             res.setReferenceId(r.getId());
             res.setReferenceLink(r.getReferenceLink());
             res.setReferenceDescription(r.getReferenceDescription());
 
-            threadReferenceResList.add(res);
+            referenceResList.add(res);
         }
 
         ThreadResDto resDto = new ThreadResDto();
         resDto.setCategoryList(categoryResList);
         resDto.setContentList(contentResList);
-        resDto.setReferenceList(threadReferenceResList);
+        resDto.setReferenceList(referenceResList);
         resDto.setTagList(tagResList);
         resDto.setThreadId(thread.getId());
         resDto.setThreadTitle(thread.getThreadTitle());
@@ -127,14 +124,14 @@ public class ThreadService {
                 .threadThumbnail(threadCreateReqDto.getThumbnail())
                 .threadSummary(threadCreateReqDto.getSummary())
                 .contentList(threadCreateReqDto.getContentList())
-                .threadReferenceList(threadCreateReqDto.getThreadReferenceList())
+                .referenceList(threadCreateReqDto.getReferenceList())
                 .tagList(threadCreateReqDto.getTagList())
                 .categoryList(threadCreateReqDto.getCategoryList())
-                .status(ThreadStatus.생성대기.name())
+                .status("대기")
                 .build();
 
         Thread createdThread = threadRepository.save(thread);
-        // todo content object 하나만 가지도록 (리스트 X)
+
         for (Content c : threadCreateReqDto.getContentList()) {
             contentRepository.save(c);
             c.addThread(createdThread);
@@ -147,64 +144,71 @@ public class ThreadService {
             categoryRepository.save(c);
             c.addThread(createdThread);
         }
-        for (ThreadReference r : threadCreateReqDto.getThreadReferenceList()) {
-            threadReferenceRepository.save(r);
+        for (Reference r : threadCreateReqDto.getReferenceList()) {
+            referenceRepository.save(r);
             r.addThread(createdThread);
         }
 
-        CommonResponse resDto = new CommonResponse();
-        resDto.setMessage("Thread on the waiting list.");
-        return resDto;
-    }
+        CommonResponse response = new CommonResponse();
+        response.setMessage("Thread on the waiting list.");
 
-    // 조회수 (최근 조회된 문서 리스트)
-    // 마이 페이지
-    // temp register 임시저장 (token) user 하나당
-    // todo temp 테이블 5개 CRUD + 조회
-    // 캐쉬 서버
-
-    @Transactional
-    public CommonResponse registerUpdateThread(Long threadId, ThreadUpdateReqDto threadUpdateReqDto) {
-        Thread foundThread = threadRepository.findById(threadId)
-                .orElseThrow(() -> new NullPointerException("Thread Not Found."));
-
-        foundThread.update(threadUpdateReqDto, foundThread);
-        foundThread.changeStatus(ThreadStatus.수정대기.name());
-
-        foundThread.getContentList().forEach(c -> {
-            Content content = contentRepository.findById(c.getId()).orElse(null);
-            if(content != null) {
-                content.update(content, c);
-            } else {
-                contentRepository.save(c);
-                c.addThread(foundThread);
-            }
-        });
-
-        CommonResponse resDto = new CommonResponse();
-        resDto.setMessage("Thread on the waiting list.");
-        return resDto;
+        return response;
     }
 
     public ThreadListResDto getThreadListByTagId(Long tagId) {
-        Tag tag = tagRepository.getOne(tagId);
+        Tag tag = tagRepository.findById(tagId).orElse(null);
         List<Tag> tagList = new ArrayList<>();
         tagList.add(tag);
         List<ThreadAdminResDto> resDtoList = new ArrayList<>();
 
-        List<Thread> threadList = threadRepository.findAllByTagListIn(tagList);
-        for (Thread d : threadList) {
+        List<Thread> threadList = threadRepository.findAllByStatusAndTagListIn("승인", tagList);
+        for (Thread t : threadList) {
             ThreadAdminResDto res = new ThreadAdminResDto();
+            res.setThreadId(t.getId());
+            res.setThreadTitle(t.getThreadTitle());
+            res.setThreadSubTitle(t.getThreadSubTitle());
+            res.setThreadThumbnail(t.getThreadThumbnail());
+            List<ContentResDto> contentList = new ArrayList<>();
+            t.getContentList().forEach(c -> {
+                ContentResDto contentRes = new ContentResDto();
+                contentRes.setContentId(c.getId());
+                contentRes.setType(c.getThreadType().name());
+                contentRes.setValue(c.getValue());
+                contentRes.setSummary(c.getSummary());
 
-            res.setNickname("테스트닉네임");
-            res.setThreadId(d.getId());
-            res.setThreadTitle(d.getThreadTitle());
-            res.setThreadSubTitle(d.getThreadSubTitle());
-            res.setThreadThumbnail(d.getThreadThumbnail());
-            res.setTagList(d.getTagList());
-            res.setThreadReferenceList(d.getThreadReferenceList());
-//            res.setContentList(d.getContentList());
-//            res.setCategoryList(d.getCategoryList());
+                contentList.add(contentRes);
+            });
+            res.setContentList(contentList);
+            List<CategoryResDto> categoryList = new ArrayList<>();
+            t.getCategoryList().forEach(c -> {
+                CategoryResDto categoryRes = new CategoryResDto();
+                categoryRes.setCategoryId(c.getId());
+                categoryRes.setCategory(c.getCategory());
+
+                categoryList.add(categoryRes);
+            });
+            res.setCategoryList(categoryList);
+            List<TagResDto> tagResList = new ArrayList<>();
+            t.getTagList().forEach(tr -> {
+                TagResDto tagRes = new TagResDto();
+                tagRes.setTagId(tr.getId());
+                tagRes.setTag(tr.getTagName());
+
+                tagResList.add(tagRes);
+            });
+            res.setTagList(tagResList);
+            List<ReferenceResDto> referenceList = new ArrayList<>();
+            t.getReferenceList().forEach(r -> {
+                ReferenceResDto referenceRes = new ReferenceResDto();
+                referenceRes.setReferenceId(r.getId());
+                referenceRes.setReferenceLink(r.getReferenceLink());
+                referenceRes.setReferenceDescription(r.getReferenceDescription());
+
+                referenceList.add(referenceRes);
+            });
+            res.setReferenceList(referenceList);
+            res.setStatus(t.getStatus());
+            res.setNickname("닉네임테스트");
 
             resDtoList.add(res);
         }

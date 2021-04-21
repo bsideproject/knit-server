@@ -5,7 +5,6 @@ import com.project.knit.dto.res.CategoryResDto;
 import com.project.knit.dto.res.CommonResponse;
 import com.project.knit.dto.res.S3ImageResDto;
 import com.project.knit.dto.res.TagResDto;
-import com.project.knit.dto.res.ThreadCreateResDto;
 import com.project.knit.dto.res.ThreadListResDto;
 import com.project.knit.dto.res.ThreadResDto;
 import com.project.knit.service.S3Service;
@@ -39,7 +38,6 @@ public class ThreadController {
 
     @GetMapping("/thread/{threadId}")
     public ResponseEntity<ThreadResDto> getThreadInfoById(@PathVariable Long threadId) {
-        // status에 따라서 http코드를 다르게
         return new ResponseEntity<>(threadService.getThreadInfoById(threadId), HttpStatus.OK);
     }
 
@@ -48,7 +46,7 @@ public class ThreadController {
         return new ResponseEntity<>(threadService.registerThread(threadCreateReqDto), HttpStatus.OK);
     }
 
-    @PostMapping("/v1/threads/tag/{tagId}")
+    @GetMapping("/v1/threads/tag/{tagId}")
     public ResponseEntity<ThreadListResDto> getThreadListByTagId(@PathVariable Long tagId) {
         return new ResponseEntity<>(threadService.getThreadListByTagId(tagId), HttpStatus.OK);
     }
