@@ -46,6 +46,11 @@ public class ThreadController {
         return new ResponseEntity<>(threadService.registerThread(threadCreateReqDto), HttpStatus.OK);
     }
 
+//    @PostMapping("/v1/threads/update/{threadId}")
+//    public ResponseEntity<CommonResponse> updateRegisterThread(@PathVariable Long threadId, @RequestBody ThreadUpdateReqDto threadUpdateReqDto) {
+//        return new ResponseEntity<>(threadService.updateRegisterThread(threadId, threadUpdateReqDto), HttpStatus.OK);
+//    }
+
     @GetMapping("/v1/threads/tag/{tagId}")
     public ResponseEntity<ThreadListResDto> getThreadListByTagId(@PathVariable Long tagId) {
         return new ResponseEntity<>(threadService.getThreadListByTagId(tagId), HttpStatus.OK);
@@ -56,14 +61,9 @@ public class ThreadController {
         return new ResponseEntity<>(threadService.checkTagName(tagName), HttpStatus.OK);
     }
 
-    @PostMapping("/upload/thumbnail")
-    public ResponseEntity<S3ImageResDto> uploadThreadThumbnail(@RequestPart(value = "file") MultipartFile multipartFile, @RequestPart(value = "fileName") String filename) throws IOException {
-        return new ResponseEntity<>(s3Service.uploadThumbnail(multipartFile, filename), HttpStatus.OK);
-    }
-
-    @PostMapping("/upload/image")
-    public ResponseEntity<S3ImageResDto> uploadThreadFile(MultipartFile multipartFile, @RequestPart String filename) throws IOException {
-        return new ResponseEntity<>(s3Service.uploadThreadFile(multipartFile, filename), HttpStatus.OK);
+    @PostMapping("/upload")
+    public ResponseEntity<S3ImageResDto> upload(@RequestPart(value = "file") MultipartFile multipartFile, @RequestPart(value = "type") String type) throws IOException {
+        return new ResponseEntity<>(s3Service.upload(multipartFile, type), HttpStatus.OK);
     }
 
     @GetMapping("/tags")

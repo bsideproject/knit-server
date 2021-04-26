@@ -16,6 +16,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.Optional;
 
 @Slf4j
@@ -34,7 +35,17 @@ public class S3Service {
     @Value("s3.dir.thumbnail")
     private String thumbnailDir;
 
-    public S3ImageResDto uploadThumbnail(MultipartFile multipartFile, String filename) throws IOException {
+    public S3ImageResDto upload(MultipartFile multipartFile, String type) throws IOException {
+        if (type.equals("thumbnail")) {
+            return uploadThumbnail(multipartFile);
+        } else if (type.equals("image")) {
+            return uploadThreadFile(multipartFile);
+        } else {
+            return new S3ImageResDto();
+        }
+    }
+
+    private S3ImageResDto uploadThumbnail(MultipartFile multipartFile) throws IOException {
 
         File uploadFile = convert(multipartFile)
                 .orElseThrow(() -> new IllegalArgumentException("Failed to convert from MultipartFile to File"));
@@ -44,6 +55,8 @@ public class S3Service {
                 .withCredentials(new AWSStaticCredentialsProvider(credentials))
                 .withRegion(Regions.AP_NORTHEAST_2)
                 .build();
+
+        String filename = generateFileName("thumbnail");
 
         s3Client.putObject(
                 thumbnailDir,
@@ -56,12 +69,11 @@ public class S3Service {
 
         return res;
 //        String s3filePathUrl = s3BaseUrl.concat(thumbnailDir).concat(filename).replaceAll("\s", "+");
-
     }
 
     private Optional<File> convert(MultipartFile file) throws IOException {
         File convertFile = new File(file.getOriginalFilename());
-        if(convertFile.createNewFile()) {
+        if (convertFile.createNewFile()) {
             try (FileOutputStream fos = new FileOutputStream(convertFile)) {
                 fos.write(file.getBytes());
             }
@@ -71,7 +83,7 @@ public class S3Service {
         return Optional.empty();
     }
 
-    public S3ImageResDto uploadThreadFile(MultipartFile multipartFile, String filename) throws IOException {
+    private S3ImageResDto uploadThreadFile(MultipartFile multipartFile) throws IOException {
 
         File uploadFile = convert(multipartFile)
                 .orElseThrow(() -> new IllegalArgumentException("Failed to convert from MultipartFile to File"));
@@ -82,6 +94,8 @@ public class S3Service {
                 .withRegion(Regions.AP_NORTHEAST_2)
                 .build();
 
+        String filename = generateFileName("image");
+
         s3Client.putObject(
                 threadDir,
                 filename, // 확장자 포함
@@ -91,6 +105,10 @@ public class S3Service {
         res.setUrl(s3Client.getUrl(threadDir, filename).toString());
 
         return res;
+    }
+
+    private String generateFileName(String type) {
+        return LocalDateTime.now() + "_" + type;
     }
 
 //    // Create a bucket by using a S3Waiter object

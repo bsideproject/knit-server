@@ -19,6 +19,7 @@ import com.project.knit.dto.res.TagResDto;
 import com.project.knit.dto.res.ThreadAdminResDto;
 import com.project.knit.dto.res.ThreadListResDto;
 import com.project.knit.dto.res.ThreadResDto;
+import com.project.knit.utils.enums.ThreadStatus;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -52,8 +53,7 @@ public class ThreadService {
     }
 
     public ThreadResDto getThreadInfoById(Long id) {
-        Thread thread = threadRepository.findById(id)
-                .orElseThrow(NullPointerException::new);
+        Thread thread = threadRepository.findByIdAndStatus(id, ThreadStatus.생성승인.name()) == null ? threadRepository.findByIdAndStatus(id, ThreadStatus.수정승인.name()) : threadRepository.findByIdAndStatus(id, ThreadStatus.생성승인.name());
         Long threadId = thread.getId();
 
         List<Content> contentList = contentRepository.findAllByThreadId(threadId);
@@ -127,7 +127,7 @@ public class ThreadService {
                 .referenceList(threadCreateReqDto.getReferenceList())
                 .tagList(threadCreateReqDto.getTagList())
                 .categoryList(threadCreateReqDto.getCategoryList())
-                .status("대기")
+                .status(ThreadStatus.생성대기.name())
                 .build();
 
         Thread createdThread = threadRepository.save(thread);
@@ -154,6 +154,30 @@ public class ThreadService {
 
         return response;
     }
+
+//    @Transactional
+//    public CommonResponse updateRegisterThread(Long threadId, ThreadUpdateReqDto threadUpdateReqDto) {
+//        Thread thread = threadRepository.findById(threadId).orElseThrow(() -> new NullPointerException("Thread Info Not Found."));
+//
+//        threadUpdateReqDto.getTagList().forEach(t -> {
+//            checkTagName(t.getTagName());
+//        });
+//
+//        thread = Thread.builder()
+//                .threadSubTitle(threadUpdateReqDto.getSubTitle())
+//                .threadThumbnail(threadUpdateReqDto.getThumbnail())
+//                .threadSummary(threadUpdateReqDto.getSummary())
+//                .contentList(threadUpdateReqDto.getContentList())
+//                .referenceList(threadUpdateReqDto.getReferenceList())
+//                .tagList(threadUpdateReqDto.getTagList())
+//                .categoryList(threadUpdateReqDto.getCategoryList())
+//                .status(ThreadStatus.수정대기.name())
+//                .build();
+//
+//        Thread createdThread = threadRepository.save(thread);
+//
+//
+//    }
 
     public ThreadListResDto getThreadListByTagId(Long tagId) {
         Tag tag = tagRepository.findById(tagId).orElse(null);

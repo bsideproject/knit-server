@@ -18,5 +18,4 @@ public class ThreadResDto {
     private List<TagResDto> tagList;
     private List<CategoryResDto> categoryList;
     private List<ReferenceResDto> referenceList;
-
 }

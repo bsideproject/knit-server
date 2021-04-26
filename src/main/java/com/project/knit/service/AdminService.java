@@ -8,6 +8,7 @@ import com.project.knit.dto.res.ContentResDto;
 import com.project.knit.dto.res.ReferenceResDto;
 import com.project.knit.dto.res.TagResDto;
 import com.project.knit.dto.res.ThreadAdminResDto;
+import com.project.knit.utils.enums.ThreadStatus;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -21,8 +22,8 @@ public class AdminService {
     private final ThreadRepository threadRepository;
 
     public CommonResponse acceptThread(Long threadId) {
-        Thread thread = threadRepository.getOne(threadId);
-        thread.changeStatus("승인");
+        Thread thread = threadRepository.findById(threadId).orElseThrow(() -> new NullPointerException("Thread Info Not Found."));
+        thread.changeStatus(ThreadStatus.승인.name());
 
         threadRepository.save(thread);
         // ThreadCategory save
@@ -36,8 +37,8 @@ public class AdminService {
     }
 
     public CommonResponse declineThread(Long threadId) {
-        Thread thread = threadRepository.getOne(threadId);
-        thread.changeStatus("반려");
+        Thread thread = threadRepository.findById(threadId).orElseThrow(() -> new NullPointerException("Thread Info Not Found."));
+        thread.changeStatus(ThreadStatus.반려.name());
 
         threadRepository.save(thread);
 

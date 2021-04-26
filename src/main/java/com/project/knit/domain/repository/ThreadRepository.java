@@ -9,4 +9,5 @@ import java.util.List;
 public interface ThreadRepository extends JpaRepository<Thread, Long> {
     List<Thread> findAllByStatusAndTagListIn(String status, List<Tag> tagList);
     List<Thread> findAllByStatusOrderByModifiedDateDesc(String status);
+    Thread findByIdAndStatus(Long id, String status);
 }
