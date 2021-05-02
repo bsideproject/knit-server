@@ -1,15 +1,12 @@
 package com.project.knit.domain.entity;
 
+import com.project.knit.utils.enums.Role;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import javax.persistence.*;
 import javax.validation.constraints.Email;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -42,4 +39,14 @@ public class User extends TimeEntity {
 
     // default 255
     private String introduction;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role;
+
+    @Builder
+    public User(String email, Role role) {
+        this.email = email;
+        this.role = role;
+    }
 }

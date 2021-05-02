@@ -72,7 +72,7 @@ public class S3Service {
     }
 
     private Optional<File> convert(MultipartFile file) throws IOException {
-        File convertFile = new File(file.getOriginalFilename());
+        File convertFile = new File(file.getName());
         if (convertFile.createNewFile()) {
             try (FileOutputStream fos = new FileOutputStream(convertFile)) {
                 fos.write(file.getBytes());
@@ -83,10 +83,19 @@ public class S3Service {
         return Optional.empty();
     }
 
+    private File convertMultiPartToFile(MultipartFile file) throws IOException {
+        File convFile = new File(file.getName());
+        FileOutputStream fos = new FileOutputStream(convFile);
+        fos.write(file.getBytes());
+        fos.close();
+        return convFile;
+    }
+
     private S3ImageResDto uploadThreadFile(MultipartFile multipartFile) throws IOException {
 
-        File uploadFile = convert(multipartFile)
-                .orElseThrow(() -> new IllegalArgumentException("Failed to convert from MultipartFile to File"));
+//        File uploadFile = convert(multipartFile)
+//                        .orElseThrow(() -> new IllegalArgumentException("Failed to convert from MultipartFile to File"));
+        File uploadFile = convertMultiPartToFile(multipartFile);
         AWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
         AmazonS3 s3Client = AmazonS3ClientBuilder
                 .standard()

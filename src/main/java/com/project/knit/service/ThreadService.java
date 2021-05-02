@@ -54,6 +54,9 @@ public class ThreadService {
 
     public ThreadResDto getThreadInfoById(Long id) {
         Thread thread = threadRepository.findByIdAndStatus(id, ThreadStatus.생성승인.name()) == null ? threadRepository.findByIdAndStatus(id, ThreadStatus.수정승인.name()) : threadRepository.findByIdAndStatus(id, ThreadStatus.생성승인.name());
+        if(thread == null) {
+            return new ThreadResDto();
+        }
         Long threadId = thread.getId();
 
         List<Content> contentList = contentRepository.findAllByThreadId(threadId);
