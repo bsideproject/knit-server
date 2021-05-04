@@ -49,7 +49,7 @@ public class S3Service {
     }
 
     public S3ImageResDto upload(MultipartFile multipartFile, String type) throws IOException {
-        String fileExtension = multipartFile.getOriginalFilename();
+        String fileExtension = multipartFile.getOriginalFilename().split("\\.")[1];
         if (!validateFileExtension(fileExtension)) {
             throw new IllegalArgumentException("Invalid File Extension.");
         }
