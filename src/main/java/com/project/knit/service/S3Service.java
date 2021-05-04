@@ -18,6 +18,9 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.List;
+
+import static java.util.Arrays.asList;
 
 @Slf4j
 //@RequiredArgsConstructor
@@ -28,6 +31,8 @@ public class S3Service {
     private AmazonS3 s3Client;
 
     private final String bucketName = "knit-document";
+
+    private final List<String> extensionList = asList("jpg", "jpeg", "png", "gif");
 
     private S3Service(@Value("${aws.access-key}") final String accessKey, @Value("${aws.secret-key}") final String secretKey) {
         createS3Client(accessKey, secretKey);
@@ -44,10 +49,14 @@ public class S3Service {
     }
 
     public S3ImageResDto upload(MultipartFile multipartFile, String type) throws IOException {
+        String fileExtension = multipartFile.getOriginalFilename();
+        if (!validateFileExtension(fileExtension)) {
+            throw new IllegalArgumentException("Invalid File Extension.");
+        }
         if (type.equals("thumbnail")) {
-            return uploadThumbnail(new PutObjectRequest(bucketName, "thumbnail/" + generateFileName(type), convertMultiPartToFile(multipartFile)));
+            return uploadThumbnail(new PutObjectRequest(bucketName, "thumbnail/" + generateFileName(type, fileExtension), convertMultiPartToFile(multipartFile)));
         } else if (type.equals("thread")) {
-            return uploadThreadFile(new PutObjectRequest(bucketName, "thread/" + generateFileName(type), convertMultiPartToFile(multipartFile)));
+            return uploadThreadFile(new PutObjectRequest(bucketName, "thread/" + generateFileName(type, fileExtension), convertMultiPartToFile(multipartFile)));
         } else {
             return new S3ImageResDto();
         }
@@ -100,8 +109,12 @@ public class S3Service {
         return convFile;
     }
 
-    private String generateFileName(String type) {
-        return LocalDateTime.now() + "_" + type;
+    private String generateFileName(String type, String extension) {
+        return LocalDateTime.now() + "_" + type + "." + extension;
+    }
+
+    private boolean validateFileExtension(String extension) {
+        return extensionList.contains(extension);
     }
 
 //    private String getPresignedUrl(String objectKey) {

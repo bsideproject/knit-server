@@ -7,7 +7,6 @@ import com.project.knit.dto.res.S3ImageResDto;
 import com.project.knit.dto.res.TagResDto;
 import com.project.knit.dto.res.ThreadListResDto;
 import com.project.knit.dto.res.ThreadResDto;
-import com.project.knit.service.AwsS3;
 import com.project.knit.service.S3Service;
 import com.project.knit.service.ThreadService;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +35,6 @@ public class ThreadController {
 
     private final ThreadService threadService;
     private final S3Service s3Service;
-    private final AwsS3 awsS3;
 
     @GetMapping("/thread/{threadId}")
     public ResponseEntity<ThreadResDto> getThreadInfoById(@PathVariable Long threadId) {
@@ -66,12 +64,6 @@ public class ThreadController {
     @PostMapping("/upload")
     public ResponseEntity<S3ImageResDto> upload(@RequestPart(value = "file") MultipartFile multipartFile, @RequestPart(value = "type") String type) throws IOException {
         return new ResponseEntity<>(s3Service.upload(multipartFile, type), HttpStatus.OK);
-    }
-
-    @PostMapping("/upload/s3")
-    public void uploadS3(@RequestPart(value = "file") MultipartFile multipartFile, @RequestPart(value = "type") String type) throws IOException {
-//        return new ResponseEntity<>(awsS3.upload(multipartFile, type), HttpStatus.OK);
-        awsS3.upload(multipartFile, type);
     }
 
     @GetMapping("/tags")
