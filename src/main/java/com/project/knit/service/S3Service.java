@@ -6,8 +6,9 @@ import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
+import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.project.knit.dto.res.S3ImageResDto;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -17,70 +18,78 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.Optional;
 
 @Slf4j
-@RequiredArgsConstructor
+//@RequiredArgsConstructor
 @Service
 public class S3Service {
 
-    @Value("aws.access-key")
-    private String accessKey;
+    //Amazon-s3-sdk
+    private AmazonS3 s3Client;
 
-    @Value("aws.secret-key")
-    private String secretKey;
+    private final String bucketName = "knit-document";
 
-    @Value("s3.dir.thread")
-    private String threadDir;
-    @Value("s3.dir.thumbnail")
-    private String thumbnailDir;
+    private S3Service(@Value("${aws.access-key}") final String accessKey, @Value("${aws.secret-key}") final String secretKey) {
+        createS3Client(accessKey, secretKey);
+    }
+
+    //aws S3 client 생성
+    private void createS3Client(final String accessKey, final String secretKey) {
+        AWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
+        this.s3Client = AmazonS3ClientBuilder
+                .standard()
+                .withCredentials(new AWSStaticCredentialsProvider(credentials))
+                .withRegion(Regions.AP_NORTHEAST_2)
+                .build();
+    }
 
     public S3ImageResDto upload(MultipartFile multipartFile, String type) throws IOException {
         if (type.equals("thumbnail")) {
-            return uploadThumbnail(multipartFile);
-        } else if (type.equals("image")) {
-            return uploadThreadFile(multipartFile);
+            return uploadThumbnail(new PutObjectRequest(bucketName, "thumbnail/" + generateFileName(type), convertMultiPartToFile(multipartFile)));
+        } else if (type.equals("thread")) {
+            return uploadThreadFile(new PutObjectRequest(bucketName, "thread/" + generateFileName(type), convertMultiPartToFile(multipartFile)));
         } else {
             return new S3ImageResDto();
         }
     }
 
-    private S3ImageResDto uploadThumbnail(MultipartFile multipartFile) throws IOException {
-
-        File uploadFile = convert(multipartFile)
-                .orElseThrow(() -> new IllegalArgumentException("Failed to convert from MultipartFile to File"));
-        AWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
-        AmazonS3 s3Client = AmazonS3ClientBuilder
-                .standard()
-                .withCredentials(new AWSStaticCredentialsProvider(credentials))
-                .withRegion(Regions.AP_NORTHEAST_2)
-                .build();
-
-        String filename = generateFileName("thumbnail");
-
-        s3Client.putObject(
-                thumbnailDir,
-                filename, // 확장자 포함
-                uploadFile
-        );
-
+    private S3ImageResDto uploadThumbnail(PutObjectRequest putObjectRequest) {
+        try {
+            this.s3Client.putObject(putObjectRequest);
+            log.info("upload complete : {}", putObjectRequest.getKey());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         S3ImageResDto res = new S3ImageResDto();
-        res.setUrl(s3Client.getUrl(thumbnailDir, filename).toString());
+        s3Client
+                .setObjectAcl(
+                        bucketName,
+                        putObjectRequest.getKey(),
+                        CannedAccessControlList.PublicRead
+                );
+        res.setUrl(s3Client.getUrl(bucketName, putObjectRequest.getKey()).toExternalForm());
+//        res.setUrl(getPresignedUrl(putObjectRequest.getKey()));
 
         return res;
-//        String s3filePathUrl = s3BaseUrl.concat(thumbnailDir).concat(filename).replaceAll("\s", "+");
     }
 
-    private Optional<File> convert(MultipartFile file) throws IOException {
-        File convertFile = new File(file.getName());
-        if (convertFile.createNewFile()) {
-            try (FileOutputStream fos = new FileOutputStream(convertFile)) {
-                fos.write(file.getBytes());
-            }
-            return Optional.of(convertFile);
+    private S3ImageResDto uploadThreadFile(PutObjectRequest putObjectRequest) {
+        try {
+            this.s3Client.putObject(putObjectRequest);
+            log.info("upload complete : {}", putObjectRequest.getKey());
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-
-        return Optional.empty();
+        S3ImageResDto res = new S3ImageResDto();
+        s3Client
+                .setObjectAcl(
+                        bucketName,
+                        putObjectRequest.getKey(),
+                        CannedAccessControlList.PublicRead
+                );
+        res.setUrl(s3Client.getUrl(bucketName, putObjectRequest.getKey()).toExternalForm());
+//        res.setUrl(getPresignedUrl(putObjectRequest.getKey()));
+        return res;
     }
 
     private File convertMultiPartToFile(MultipartFile file) throws IOException {
@@ -91,34 +100,29 @@ public class S3Service {
         return convFile;
     }
 
-    private S3ImageResDto uploadThreadFile(MultipartFile multipartFile) throws IOException {
-
-//        File uploadFile = convert(multipartFile)
-//                        .orElseThrow(() -> new IllegalArgumentException("Failed to convert from MultipartFile to File"));
-        File uploadFile = convertMultiPartToFile(multipartFile);
-        AWSCredentials credentials = new BasicAWSCredentials(accessKey, secretKey);
-        AmazonS3 s3Client = AmazonS3ClientBuilder
-                .standard()
-                .withCredentials(new AWSStaticCredentialsProvider(credentials))
-                .withRegion(Regions.AP_NORTHEAST_2)
-                .build();
-
-        String filename = generateFileName("image");
-
-        s3Client.putObject(
-                threadDir,
-                filename, // 확장자 포함
-                uploadFile
-        );
-        S3ImageResDto res = new S3ImageResDto();
-        res.setUrl(s3Client.getUrl(threadDir, filename).toString());
-
-        return res;
-    }
-
     private String generateFileName(String type) {
         return LocalDateTime.now() + "_" + type;
     }
+
+//    private String getPresignedUrl(String objectKey) {
+//
+//        Date expiration = new Date();
+//        long expTimeMillis = expiration.getTime();
+//        expTimeMillis += 1000 * 60 * 60; // 1시간
+//        expiration.setTime(expTimeMillis);
+////        LocalDateTime expiration = LocalDateTime.now(Clock.tick(Clock.systemDefaultZone(), Duration.ofHours(1)));
+//
+//        GeneratePresignedUrlRequest generatePresignedUrlRequest = new GeneratePresignedUrlRequest(bucketName, objectKey)
+//                .withMethod(HttpMethod.PUT)
+//                .withExpiration(expiration);
+//
+//        generatePresignedUrlRequest.addRequestParameter(Headers.S3_CANNED_ACL,
+//                CannedAccessControlList.PublicRead.toString());
+//
+//        URL url = s3Client.generatePresignedUrl(generatePresignedUrlRequest);
+//
+//        return url.toExternalForm();
+//    }
 
 //    // Create a bucket by using a S3Waiter object
 ////    public static void createBucket(S3Client s3Client, String bucketName, Region region) {
