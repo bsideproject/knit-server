@@ -10,6 +10,7 @@ import com.amazonaws.services.s3.model.CannedAccessControlList;
 import com.amazonaws.services.s3.model.PutObjectRequest;
 import com.project.knit.dto.res.S3ImageResDto;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -49,7 +50,9 @@ public class S3Service {
     }
 
     public S3ImageResDto upload(MultipartFile multipartFile, String type) throws IOException {
-        String fileExtension = multipartFile.getOriginalFilename().split("\\.")[1];
+        String fileExtension = FilenameUtils.getExtension(multipartFile.getOriginalFilename());
+        log.info("fileExtension : {}", fileExtension);
+        log.info("file size in MB : {}", convertMultiPartToFile(multipartFile).length() / (1024 * 1024));
         if (!validateFileExtension(fileExtension)) {
             throw new IllegalArgumentException("Invalid File Extension.");
         }

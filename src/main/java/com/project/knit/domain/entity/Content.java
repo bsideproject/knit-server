@@ -29,9 +29,7 @@ public class Content extends TimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "type")
-    @Enumerated(EnumType.STRING)
-    private ThreadType threadType;
+    private String threadType;
 
     private String value;
 
@@ -44,8 +42,8 @@ public class Content extends TimeEntity {
     private Thread thread;
 
     @Builder
-    public Content(ThreadType threadType, String value, Thread thread) {
-        this.threadType = threadType;
+    public Content(String threadType, String value, Thread thread) {
+        this.threadType = threadType.toUpperCase();
         this.value = value;
         this.thread = thread;
     }

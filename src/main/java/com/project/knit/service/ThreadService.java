@@ -54,7 +54,7 @@ public class ThreadService {
 
     public ThreadResDto getThreadInfoById(Long id) {
         Thread thread = threadRepository.findByIdAndStatus(id, ThreadStatus.생성승인.name()) == null ? threadRepository.findByIdAndStatus(id, ThreadStatus.수정승인.name()) : threadRepository.findByIdAndStatus(id, ThreadStatus.생성승인.name());
-        if(thread == null) {
+        if (thread == null) {
             return new ThreadResDto();
         }
         Long threadId = thread.getId();
@@ -72,7 +72,7 @@ public class ThreadService {
         for (Content c : contentList) {
             ContentResDto res = new ContentResDto();
             res.setContentId(c.getId());
-            res.setType(c.getThreadType().name());
+            res.setType(c.getThreadType());
             res.setValue(c.getValue());
             res.setSummary(c.getSummary() == null ? null : c.getSummary());
 
@@ -199,7 +199,7 @@ public class ThreadService {
             t.getContentList().forEach(c -> {
                 ContentResDto contentRes = new ContentResDto();
                 contentRes.setContentId(c.getId());
-                contentRes.setType(c.getThreadType().name());
+                contentRes.setType(c.getThreadType());
                 contentRes.setValue(c.getValue());
                 contentRes.setSummary(c.getSummary());
 
