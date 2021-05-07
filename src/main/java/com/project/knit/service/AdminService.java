@@ -62,7 +62,7 @@ public class AdminService {
             t.getContentList().forEach(c -> {
                 ContentResDto contentRes = new ContentResDto();
                 contentRes.setContentId(c.getId());
-                contentRes.setType(c.getThreadType().name());
+                contentRes.setType(c.getThreadType());
                 contentRes.setValue(c.getValue());
                 contentRes.setSummary(c.getSummary());
 
@@ -121,7 +121,7 @@ public class AdminService {
             t.getContentList().forEach(c -> {
                 ContentResDto contentRes = new ContentResDto();
                 contentRes.setContentId(c.getId());
-                contentRes.setType(c.getThreadType().name());
+                contentRes.setType(c.getThreadType());
                 contentRes.setValue(c.getValue());
                 contentRes.setSummary(c.getSummary());
 
