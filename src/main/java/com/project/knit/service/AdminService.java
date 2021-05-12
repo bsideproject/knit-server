@@ -68,7 +68,7 @@ public class AdminService {
 
                 contentList.add(contentRes);
             });
-            res.setContentList(contentList);
+            res.setContents(contentList);
             List<CategoryResDto> categoryList = new ArrayList<>();
             t.getCategoryList().forEach(c -> {
                 CategoryResDto categoryRes = new CategoryResDto();
@@ -77,7 +77,7 @@ public class AdminService {
 
                 categoryList.add(categoryRes);
             });
-            res.setCategoryList(categoryList);
+            res.setCategories(categoryList);
             List<TagResDto> tagList = new ArrayList<>();
             t.getTagList().forEach(tag -> {
                 TagResDto tagRes = new TagResDto();
@@ -86,7 +86,7 @@ public class AdminService {
 
                 tagList.add(tagRes);
             });
-            res.setTagList(tagList);
+            res.setTags(tagList);
             List<ReferenceResDto> referenceList = new ArrayList<>();
             t.getReferenceList().forEach(r -> {
                 ReferenceResDto referenceRes = new ReferenceResDto();
@@ -96,7 +96,7 @@ public class AdminService {
 
                 referenceList.add(referenceRes);
             });
-            res.setReferenceList(referenceList);
+            res.setReferences(referenceList);
             res.setStatus(t.getStatus());
             res.setNickname("닉네임테스트");
             res.setCreatedDate(t.getCreatedDate());
@@ -127,7 +127,7 @@ public class AdminService {
 
                 contentList.add(contentRes);
             });
-            res.setContentList(contentList);
+            res.setContents(contentList);
             List<CategoryResDto> categoryList = new ArrayList<>();
             t.getCategoryList().forEach(c -> {
                 CategoryResDto categoryRes = new CategoryResDto();
@@ -136,7 +136,7 @@ public class AdminService {
 
                 categoryList.add(categoryRes);
             });
-            res.setCategoryList(categoryList);
+            res.setCategories(categoryList);
             List<TagResDto> tagList = new ArrayList<>();
             t.getTagList().forEach(tag -> {
                 TagResDto tagRes = new TagResDto();
@@ -145,7 +145,7 @@ public class AdminService {
 
                 tagList.add(tagRes);
             });
-            res.setTagList(tagList);
+            res.setTags(tagList);
             List<ReferenceResDto> referenceList = new ArrayList<>();
             t.getReferenceList().forEach(r -> {
                 ReferenceResDto referenceRes = new ReferenceResDto();
@@ -155,7 +155,7 @@ public class AdminService {
 
                 referenceList.add(referenceRes);
             });
-            res.setReferenceList(referenceList);
+            res.setReferences(referenceList);
             res.setStatus(t.getStatus());
             res.setNickname("닉네임테스트");
             res.setCreatedDate(t.getCreatedDate());

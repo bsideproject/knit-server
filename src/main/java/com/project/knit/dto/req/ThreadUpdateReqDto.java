@@ -2,23 +2,30 @@ package com.project.knit.dto.req;
 
 import com.project.knit.domain.entity.Category;
 import com.project.knit.domain.entity.Content;
+import com.project.knit.domain.entity.Reference;
 import com.project.knit.domain.entity.Tag;
-import com.project.knit.domain.entity.ThreadReference;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.util.List;
 
 @Setter
 @Getter
 @NoArgsConstructor
 public class ThreadUpdateReqDto {
+    @NotBlank
     private String subTitle;
+    @NotBlank
     private String thumbnail;
     private String summary;
-    private List<Content> contentList;
-    private List<Tag> tagList;
-    private List<Category> categoryList;
-    private List<ThreadReference> threadReferenceList;
+    @NotNull
+    private List<Content> contents;
+    @NotNull
+    private List<Tag> tags;
+    @NotNull
+    private List<Category> categories;
+    private List<Reference> references;
 }

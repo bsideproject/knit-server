@@ -14,8 +14,8 @@ public class ThreadResDto {
     private String threadTitle;
     private String threadSubTitle;
     private String threadThumbnail;
-    private List<ContentResDto> contentList;
-    private List<TagResDto> tagList;
-    private List<CategoryResDto> categoryList;
-    private List<ReferenceResDto> referenceList;
+    private List<ContentResDto> contents;
+    private List<TagResDto> tags;
+    private List<CategoryResDto> categories;
+    private List<ReferenceResDto> references;
 }

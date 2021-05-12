@@ -102,10 +102,10 @@ public class ThreadService {
         }
 
         ThreadResDto resDto = new ThreadResDto();
-        resDto.setCategoryList(categoryResList);
-        resDto.setContentList(contentResList);
-        resDto.setReferenceList(referenceResList);
-        resDto.setTagList(tagResList);
+        resDto.setCategories(categoryResList);
+        resDto.setContents(contentResList);
+        resDto.setReferences(referenceResList);
+        resDto.setTags(tagResList);
         resDto.setThreadId(thread.getId());
         resDto.setThreadTitle(thread.getThreadTitle());
         resDto.setThreadSubTitle(thread.getThreadSubTitle());
@@ -117,7 +117,7 @@ public class ThreadService {
     @Transactional
     public CommonResponse registerThread(ThreadCreateReqDto threadCreateReqDto) {
 
-        threadCreateReqDto.getTagList().forEach(t -> {
+        threadCreateReqDto.getTags().forEach(t -> {
             checkTagName(t.getTagName());
         });
 
@@ -126,28 +126,28 @@ public class ThreadService {
                 .threadSubTitle(threadCreateReqDto.getSubTitle())
                 .threadThumbnail(threadCreateReqDto.getThumbnail())
                 .threadSummary(threadCreateReqDto.getSummary())
-                .contentList(threadCreateReqDto.getContentList())
-                .referenceList(threadCreateReqDto.getReferenceList())
-                .tagList(threadCreateReqDto.getTagList())
-                .categoryList(threadCreateReqDto.getCategoryList())
+                .contentList(threadCreateReqDto.getContents())
+                .referenceList(threadCreateReqDto.getReferences())
+                .tagList(threadCreateReqDto.getTags())
+                .categoryList(threadCreateReqDto.getCategories())
                 .status(ThreadStatus.생성대기.name())
                 .build();
 
         Thread createdThread = threadRepository.save(thread);
 
-        for (Content c : threadCreateReqDto.getContentList()) {
+        for (Content c : threadCreateReqDto.getContents()) {
             contentRepository.save(c);
             c.addThread(createdThread);
         }
-        for (Tag t : threadCreateReqDto.getTagList()) {
+        for (Tag t : threadCreateReqDto.getTags()) {
             tagRepository.save(t);
             t.addThread(createdThread);
         }
-        for (Category c : threadCreateReqDto.getCategoryList()) {
+        for (Category c : threadCreateReqDto.getCategories()) {
             categoryRepository.save(c);
             c.addThread(createdThread);
         }
-        for (Reference r : threadCreateReqDto.getReferenceList()) {
+        for (Reference r : threadCreateReqDto.getReferences()) {
             referenceRepository.save(r);
             r.addThread(createdThread);
         }
@@ -205,7 +205,7 @@ public class ThreadService {
 
                 contentList.add(contentRes);
             });
-            res.setContentList(contentList);
+            res.setContents(contentList);
             List<CategoryResDto> categoryList = new ArrayList<>();
             t.getCategoryList().forEach(c -> {
                 CategoryResDto categoryRes = new CategoryResDto();
@@ -214,7 +214,7 @@ public class ThreadService {
 
                 categoryList.add(categoryRes);
             });
-            res.setCategoryList(categoryList);
+            res.setCategories(categoryList);
             List<TagResDto> tagResList = new ArrayList<>();
             t.getTagList().forEach(tr -> {
                 TagResDto tagRes = new TagResDto();
@@ -223,7 +223,7 @@ public class ThreadService {
 
                 tagResList.add(tagRes);
             });
-            res.setTagList(tagResList);
+            res.setTags(tagResList);
             List<ReferenceResDto> referenceList = new ArrayList<>();
             t.getReferenceList().forEach(r -> {
                 ReferenceResDto referenceRes = new ReferenceResDto();
@@ -233,7 +233,7 @@ public class ThreadService {
 
                 referenceList.add(referenceRes);
             });
-            res.setReferenceList(referenceList);
+            res.setReferences(referenceList);
             res.setStatus(t.getStatus());
             res.setNickname("닉네임테스트");
 
@@ -241,7 +241,7 @@ public class ThreadService {
         }
         ThreadListResDto res = new ThreadListResDto();
         res.setCount(resDtoList.size());
-        res.setThreadList(resDtoList);
+        res.setThreads(resDtoList);
 
         return res;
     }

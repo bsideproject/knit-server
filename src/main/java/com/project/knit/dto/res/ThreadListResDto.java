@@ -11,5 +11,5 @@ import java.util.List;
 @NoArgsConstructor
 public class ThreadListResDto {
     private Integer count;
-    private List<ThreadAdminResDto> threadList;
+    private List<ThreadAdminResDto> threads;
 }
