@@ -1,5 +1,7 @@
 package com.project.knit.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.knit.domain.entity.Category;
 import com.project.knit.domain.entity.Content;
 import com.project.knit.domain.entity.Reference;
@@ -21,13 +23,16 @@ import com.project.knit.dto.res.ThreadListResDto;
 import com.project.knit.dto.res.ThreadResDto;
 import com.project.knit.utils.enums.ThreadStatus;
 import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
-@AllArgsConstructor
+@Slf4j
+@RequiredArgsConstructor
 @Service
 public class ThreadService {
 
@@ -116,10 +121,18 @@ public class ThreadService {
 
     @Transactional
     public CommonResponse registerThread(ThreadCreateReqDto threadCreateReqDto) {
-
-        threadCreateReqDto.getTags().forEach(t -> {
-            checkTagName(t.getTagName());
-        });
+        ObjectMapper mapper = new ObjectMapper();
+        try {
+            String request = mapper.writeValueAsString(threadCreateReqDto);
+            log.info("request : {}", request);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
+        if (threadCreateReqDto.getTags() != null) {
+            threadCreateReqDto.getTags().forEach(t -> {
+                checkTagName(t.getTagName());
+            });
+        }
 
         Thread thread = Thread.builder()
                 .threadTitle(threadCreateReqDto.getTitle())
