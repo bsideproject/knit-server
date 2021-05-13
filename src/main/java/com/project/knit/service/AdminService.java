@@ -57,7 +57,7 @@ public class AdminService {
             res.setThreadId(t.getId());
             res.setThreadTitle(t.getThreadTitle());
             res.setThreadSubTitle(t.getThreadSubTitle());
-            res.setThreadThumbnail(t.getThreadThumbnail());
+            res.setThumbnailUrl(t.getThumbnailUrl());
             List<ContentResDto> contentList = new ArrayList<>();
             t.getContentList().forEach(c -> {
                 ContentResDto contentRes = new ContentResDto();
@@ -116,7 +116,7 @@ public class AdminService {
             res.setThreadId(t.getId());
             res.setThreadTitle(t.getThreadTitle());
             res.setThreadSubTitle(t.getThreadSubTitle());
-            res.setThreadThumbnail(t.getThreadThumbnail());
+            res.setThumbnailUrl(t.getThumbnailUrl());
             List<ContentResDto> contentList = new ArrayList<>();
             t.getContentList().forEach(c -> {
                 ContentResDto contentRes = new ContentResDto();

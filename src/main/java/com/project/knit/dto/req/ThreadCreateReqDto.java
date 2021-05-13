@@ -21,7 +21,7 @@ public class ThreadCreateReqDto {
     @NotBlank
     private String subTitle;
     @NotBlank
-    private String thumbnail;
+    private String thumbnailUrl;
     private String summary;
     @NotNull
     private List<Content> contents;

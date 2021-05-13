@@ -56,7 +56,7 @@ public class S3Service {
         if (!validateFileExtension(fileExtension)) {
             throw new IllegalArgumentException("Invalid File Extension.");
         }
-        if (type.equals("thumbnail")) {
+        if (type.equals("thumbnailUrl")) {
             return uploadThumbnail(new PutObjectRequest(bucketName, "thumbnail/" + generateFileName(type, fileExtension), convertMultiPartToFile(multipartFile)));
         } else if (type.equals("thread")) {
             return uploadThreadFile(new PutObjectRequest(bucketName, "thread/" + generateFileName(type, fileExtension), convertMultiPartToFile(multipartFile)));

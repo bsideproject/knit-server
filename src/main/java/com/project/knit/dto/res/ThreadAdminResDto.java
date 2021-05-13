@@ -15,7 +15,7 @@ public class ThreadAdminResDto {
     private String nickname;
     private String threadTitle;
     private String threadSubTitle;
-    private String threadThumbnail;
+    private String thumbnailUrl;
     private List<ContentResDto> contents;
     private List<TagResDto> tags;
     private List<CategoryResDto> categories;

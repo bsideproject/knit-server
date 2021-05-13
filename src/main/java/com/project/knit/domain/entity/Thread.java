@@ -31,8 +31,8 @@ public class Thread extends TimeEntity {
     @Column(name = "thread_sub_title")
     private String threadSubTitle;
 
-    @Column(name = "thread_thumbnail")
-    private String threadThumbnail;
+    @Column(name = "thumbnail_url")
+    private String thumbnailUrl;
 
     @Column(name = "thread_summary")
     private String threadSummary;
@@ -56,10 +56,10 @@ public class Thread extends TimeEntity {
     private String status;
 
     @Builder
-    public Thread(String threadTitle, String threadSubTitle, String threadThumbnail, String threadSummary, List<Content> contentList,List<Reference> referenceList, List<Tag> tagList, List<Category> categoryList, String status) {
+    public Thread(String threadTitle, String threadSubTitle, String thumbnailUrl, String threadSummary, List<Content> contentList,List<Reference> referenceList, List<Tag> tagList, List<Category> categoryList, String status) {
         this.threadTitle = threadTitle;
         this.threadSubTitle = threadSubTitle;
-        this.threadThumbnail = threadThumbnail;
+        this.thumbnailUrl = thumbnailUrl;
         this.threadSummary = threadSummary;
         this.contentList = contentList;
         this.referenceList = referenceList;

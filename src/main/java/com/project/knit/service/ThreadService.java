@@ -109,7 +109,7 @@ public class ThreadService {
         resDto.setThreadId(thread.getId());
         resDto.setThreadTitle(thread.getThreadTitle());
         resDto.setThreadSubTitle(thread.getThreadSubTitle());
-        resDto.setThreadThumbnail(thread.getThreadThumbnail());
+        resDto.setThumbnailUrl(thread.getThumbnailUrl());
 
         return resDto;
     }
@@ -124,7 +124,7 @@ public class ThreadService {
         Thread thread = Thread.builder()
                 .threadTitle(threadCreateReqDto.getTitle())
                 .threadSubTitle(threadCreateReqDto.getSubTitle())
-                .threadThumbnail(threadCreateReqDto.getThumbnail())
+                .thumbnailUrl(threadCreateReqDto.getThumbnailUrl())
                 .threadSummary(threadCreateReqDto.getSummary())
                 .contentList(threadCreateReqDto.getContents())
                 .referenceList(threadCreateReqDto.getReferences())
@@ -194,7 +194,7 @@ public class ThreadService {
             res.setThreadId(t.getId());
             res.setThreadTitle(t.getThreadTitle());
             res.setThreadSubTitle(t.getThreadSubTitle());
-            res.setThreadThumbnail(t.getThreadThumbnail());
+            res.setThumbnailUrl(t.getThumbnailUrl());
             List<ContentResDto> contentList = new ArrayList<>();
             t.getContentList().forEach(c -> {
                 ContentResDto contentRes = new ContentResDto();
