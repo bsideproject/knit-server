@@ -37,7 +37,7 @@ public class ThreadController {
     private final S3Service s3Service;
 
     @GetMapping("/thread/{threadId}")
-    public ResponseEntity<ThreadResDto> getThreadInfoById(@PathVariable Long threadId) {
+    public ResponseEntity<CommonResponse<ThreadResDto>> getThreadInfoById(@PathVariable Long threadId) {
         return new ResponseEntity<>(threadService.getThreadInfoById(threadId), HttpStatus.OK);
     }
 
@@ -52,7 +52,7 @@ public class ThreadController {
 //    }
 
     @GetMapping("/v1/threads/tag/{tagId}")
-    public ResponseEntity<ThreadListResDto> getThreadListByTagId(@PathVariable Long tagId) {
+    public ResponseEntity<CommonResponse<ThreadListResDto>> getThreadListByTagId(@PathVariable Long tagId) {
         return new ResponseEntity<>(threadService.getThreadListByTagId(tagId), HttpStatus.OK);
     }
 
@@ -67,12 +67,12 @@ public class ThreadController {
     }
 
     @GetMapping("/tags")
-    public ResponseEntity<List<TagResDto>> getAllTags() {
+    public ResponseEntity<CommonResponse<List<TagResDto>>> getAllTags() {
         return new ResponseEntity<>(threadService.getAllTags(), HttpStatus.OK);
     }
 
     @GetMapping("/categories")
-    public ResponseEntity<List<CategoryResDto>> getAllCategories() {
+    public ResponseEntity<CommonResponse<List<CategoryResDto>>> getAllCategories() {
         return new ResponseEntity<>(threadService.getAllCategories(), HttpStatus.OK);
     }
 }

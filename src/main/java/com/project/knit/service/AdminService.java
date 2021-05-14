@@ -8,6 +8,7 @@ import com.project.knit.dto.res.ContentResDto;
 import com.project.knit.dto.res.ReferenceResDto;
 import com.project.knit.dto.res.TagResDto;
 import com.project.knit.dto.res.ThreadAdminResDto;
+import com.project.knit.utils.enums.StatusCodeEnum;
 import com.project.knit.utils.enums.ThreadStatus;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -21,7 +22,7 @@ public class AdminService {
 
     private final ThreadRepository threadRepository;
 
-    public CommonResponse acceptThread(Long threadId) {
+    public <T> CommonResponse<T> acceptThread(Long threadId) {
         Thread thread = threadRepository.findById(threadId).orElseThrow(() -> new NullPointerException("Thread Info Not Found."));
         thread.changeStatus(ThreadStatus.승인.name());
 
@@ -30,25 +31,19 @@ public class AdminService {
         // ThreadTag save
         // ThreadReference save
 
-        CommonResponse response = new CommonResponse();
-        response.setMessage("Thread Successfully Created.");
-
-        return response;
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "[ADMIN] Thread Successfully Created.");
     }
 
-    public CommonResponse declineThread(Long threadId) {
+    public <T> CommonResponse<T> declineThread(Long threadId) {
         Thread thread = threadRepository.findById(threadId).orElseThrow(() -> new NullPointerException("Thread Info Not Found."));
         thread.changeStatus(ThreadStatus.반려.name());
 
         threadRepository.save(thread);
 
-        CommonResponse response = new CommonResponse();
-        response.setMessage("Thread Declined.");
-
-        return response;
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "[ADMIN] Thread Declined.");
     }
 
-    public List<ThreadAdminResDto> getAllThreadList() {
+    public CommonResponse<List<ThreadAdminResDto>> getAllThreadList() {
         List<Thread> threadList = threadRepository.findAll();
         List<ThreadAdminResDto> resDtoList = new ArrayList<>();
 
@@ -59,10 +54,10 @@ public class AdminService {
             res.setThreadSubTitle(t.getThreadSubTitle());
             res.setThumbnailUrl(t.getThumbnailUrl());
             List<ContentResDto> contentList = new ArrayList<>();
-            t.getContentList().forEach(c -> {
+            t.getContents().forEach(c -> {
                 ContentResDto contentRes = new ContentResDto();
                 contentRes.setContentId(c.getId());
-                contentRes.setType(c.getThreadType());
+                contentRes.setType(c.getContentType());
                 contentRes.setValue(c.getValue());
                 contentRes.setSummary(c.getSummary());
 
@@ -70,7 +65,7 @@ public class AdminService {
             });
             res.setContents(contentList);
             List<CategoryResDto> categoryList = new ArrayList<>();
-            t.getCategoryList().forEach(c -> {
+            t.getCategories().forEach(c -> {
                 CategoryResDto categoryRes = new CategoryResDto();
                 categoryRes.setCategoryId(c.getId());
                 categoryRes.setCategory(c.getCategory());
@@ -79,7 +74,7 @@ public class AdminService {
             });
             res.setCategories(categoryList);
             List<TagResDto> tagList = new ArrayList<>();
-            t.getTagList().forEach(tag -> {
+            t.getTags().forEach(tag -> {
                 TagResDto tagRes = new TagResDto();
                 tagRes.setTagId(tag.getId());
                 tagRes.setTag(tag.getTagName());
@@ -88,7 +83,7 @@ public class AdminService {
             });
             res.setTags(tagList);
             List<ReferenceResDto> referenceList = new ArrayList<>();
-            t.getReferenceList().forEach(r -> {
+            t.getReferences().forEach(r -> {
                 ReferenceResDto referenceRes = new ReferenceResDto();
                 referenceRes.setReferenceId(r.getId());
                 referenceRes.setReferenceLink(r.getReferenceLink());
@@ -104,10 +99,10 @@ public class AdminService {
             resDtoList.add(res);
         }
 
-        return resDtoList;
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "[ADMIN] All Thread List.", resDtoList);
     }
 
-    public List<ThreadAdminResDto> getThreadListByStatus(String status) {
+    public CommonResponse<List<ThreadAdminResDto>> getThreadListByStatus(String status) {
         List<Thread> threadList = threadRepository.findAllByStatusOrderByModifiedDateDesc(status);
         List<ThreadAdminResDto> resDtoList = new ArrayList<>();
 
@@ -118,10 +113,10 @@ public class AdminService {
             res.setThreadSubTitle(t.getThreadSubTitle());
             res.setThumbnailUrl(t.getThumbnailUrl());
             List<ContentResDto> contentList = new ArrayList<>();
-            t.getContentList().forEach(c -> {
+            t.getContents().forEach(c -> {
                 ContentResDto contentRes = new ContentResDto();
                 contentRes.setContentId(c.getId());
-                contentRes.setType(c.getThreadType());
+                contentRes.setType(c.getContentType());
                 contentRes.setValue(c.getValue());
                 contentRes.setSummary(c.getSummary());
 
@@ -129,7 +124,7 @@ public class AdminService {
             });
             res.setContents(contentList);
             List<CategoryResDto> categoryList = new ArrayList<>();
-            t.getCategoryList().forEach(c -> {
+            t.getCategories().forEach(c -> {
                 CategoryResDto categoryRes = new CategoryResDto();
                 categoryRes.setCategoryId(c.getId());
                 categoryRes.setCategory(c.getCategory());
@@ -138,7 +133,7 @@ public class AdminService {
             });
             res.setCategories(categoryList);
             List<TagResDto> tagList = new ArrayList<>();
-            t.getTagList().forEach(tag -> {
+            t.getTags().forEach(tag -> {
                 TagResDto tagRes = new TagResDto();
                 tagRes.setTagId(tag.getId());
                 tagRes.setTag(tag.getTagName());
@@ -147,7 +142,7 @@ public class AdminService {
             });
             res.setTags(tagList);
             List<ReferenceResDto> referenceList = new ArrayList<>();
-            t.getReferenceList().forEach(r -> {
+            t.getReferences().forEach(r -> {
                 ReferenceResDto referenceRes = new ReferenceResDto();
                 referenceRes.setReferenceId(r.getId());
                 referenceRes.setReferenceLink(r.getReferenceLink());
@@ -163,6 +158,6 @@ public class AdminService {
             resDtoList.add(res);
         }
 
-        return resDtoList;
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "[ADMIN] All Thread List By Status.", resDtoList);
     }
 }

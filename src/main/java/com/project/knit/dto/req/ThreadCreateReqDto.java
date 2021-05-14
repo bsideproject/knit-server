@@ -1,9 +1,5 @@
 package com.project.knit.dto.req;
 
-import com.project.knit.domain.entity.Category;
-import com.project.knit.domain.entity.Content;
-import com.project.knit.domain.entity.Reference;
-import com.project.knit.domain.entity.Tag;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,18 +12,17 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 public class ThreadCreateReqDto {
-    @NotBlank
+    @NotBlank(message = "Thread Title is required.")
     private String title;
-    @NotBlank
+    @NotBlank(message = "Thread SubTitle is required.")
     private String subTitle;
-    @NotBlank
     private String thumbnailUrl;
     private String summary;
-    @NotNull
-    private List<Content> contents;
-    @NotNull
-    private List<Tag> tags;
-    @NotNull
-    private List<Category> categories;
-    private List<Reference> references;
+    @NotNull(message = "At least one content is required.")
+    private List<ContentReqDto> contents;
+    @NotNull(message = "At least one tag is required.")
+    private List<String> tags;
+    @NotNull(message = "At least one category is required.")
+    private List<CategoryReqDto> categories;
+    private List<ReferenceReqDto> references;
 }

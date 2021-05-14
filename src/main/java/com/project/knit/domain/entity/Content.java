@@ -29,23 +29,22 @@ public class Content extends TimeEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String threadType;
+    private String contentType;
 
     private String value;
 
     private String summary;
 
-    @JsonIgnore
     @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "thread_id")
     private Thread thread;
 
     @Builder
-    public Content(String threadType, String value, Thread thread) {
-        this.threadType = threadType.toUpperCase();
+    public Content(String contentType, String value, String summary) {
+        this.contentType = contentType.toUpperCase();
         this.value = value;
-        this.thread = thread;
+        this.summary = summary;
     }
 
     public void addThread(Thread thread) {
@@ -53,7 +52,7 @@ public class Content extends TimeEntity {
     }
 
     public void update(Content originalContent, Content newContent) {
-        this.threadType = newContent.getThreadType() == null ? originalContent.getThreadType() : newContent.getThreadType();
+        this.contentType = newContent.getContentType() == null ? originalContent.getContentType() : newContent.getContentType();
         this.value = newContent.getValue() == null ? originalContent.getValue() : newContent.getValue();
         this.summary = newContent.getSummary() == null ? originalContent.getSummary() : newContent.getSummary();
     }

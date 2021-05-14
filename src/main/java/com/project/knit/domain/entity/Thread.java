@@ -39,32 +39,28 @@ public class Thread extends TimeEntity {
 
     @JsonManagedReference
     @OneToMany(mappedBy = "thread")
-    private List<Content> contentList = new ArrayList<>();
+    private List<Content> contents = new ArrayList<>();
 
     @JsonManagedReference
     @OneToMany(mappedBy = "thread")
-    private List<Tag> tagList = new ArrayList<>();
+    private List<Tag> tags = new ArrayList<>();
 
     @JsonManagedReference
     @OneToMany(mappedBy = "thread")
-    private List<Category> categoryList = new ArrayList<>();
+    private List<Category> categories = new ArrayList<>();
 
     @JsonManagedReference
     @OneToMany(mappedBy = "thread")
-    private List<Reference> referenceList = new ArrayList<>();
+    private List<Reference> references = new ArrayList<>();
 
     private String status;
 
     @Builder
-    public Thread(String threadTitle, String threadSubTitle, String thumbnailUrl, String threadSummary, List<Content> contentList,List<Reference> referenceList, List<Tag> tagList, List<Category> categoryList, String status) {
+    public Thread(String threadTitle, String threadSubTitle, String thumbnailUrl, String threadSummary, String status) {
         this.threadTitle = threadTitle;
         this.threadSubTitle = threadSubTitle;
         this.thumbnailUrl = thumbnailUrl;
         this.threadSummary = threadSummary;
-        this.contentList = contentList;
-        this.referenceList = referenceList;
-        this.tagList = tagList;
-        this.categoryList = categoryList;
         this.status = status;
     }
 
@@ -72,15 +68,41 @@ public class Thread extends TimeEntity {
         this.status = status;
     }
 
-    public void addContent(Content content) {
-        this.contentList.add(content);
+    public void addContents(List<Content> contents) {
+        this.contents.addAll(contents);
     }
 
-    public void addTagList(List<Tag> tagList) {
-        this.tagList = tagList;
+    public void addTags(List<Tag> tags) {
+        this.tags.addAll(tags);
     }
 
-    public void addCategoryList(List<Category> categoryList) {
-        this.categoryList = categoryList;
+    public void addCategories(List<Category> categories) {
+        this.categories.addAll(categories);
+    }
+
+    public void addReferences(List<Reference> references) {
+        this.references.addAll(references);
+    }
+
+    public void update(Thread originalThread, String threadSubTitle, String thumbnailUrl, String threadSummary) {
+        this.threadSubTitle = threadSubTitle == null ? originalThread.getThreadSubTitle() : threadSubTitle;
+        this.thumbnailUrl = thumbnailUrl == null ? originalThread.getThumbnailUrl() : thumbnailUrl;
+        this.threadSummary = threadSummary == null ? originalThread.getThreadSummary() : threadSummary;
+    }
+
+    public void updateContents(List<Content> contents) {
+        this.contents.addAll(contents);
+    }
+
+    public void updateTags(List<Tag> tags) {
+        this.tags.addAll(tags);
+    }
+
+    public void updateCategories(List<Category> categories) {
+        this.categories.addAll(categories);
+    }
+
+    public void updateReferences(List<Reference> references) {
+        this.references.addAll(references);
     }
 }

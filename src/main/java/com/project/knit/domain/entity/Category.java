@@ -1,8 +1,8 @@
 package com.project.knit.domain.entity;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -17,7 +17,7 @@ import javax.persistence.ManyToOne;
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Getter
 @Entity
-public class Category extends TimeEntity{
+public class Category extends TimeEntity {
     @Column(name = "category_id")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -25,14 +25,18 @@ public class Category extends TimeEntity{
 
     private String category;
 
-    @JsonIgnore
     private String description;
 
-    @JsonIgnore
     @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "thread_id")
     private Thread thread;
+
+    @Builder
+    public Category(String category, String description) {
+        this.category = category;
+        this.description = description;
+    }
 
     public void addThread(Thread thread) {
         this.thread = thread;

@@ -32,17 +32,15 @@ public class Reference extends TimeEntity {
     @Column(name = "reference_description", columnDefinition = "VARCHAR(500) COMMENT '참조링크에 대한 설명'")
     private String referenceDescription;
 
-    @JsonIgnore
     @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "thread_id")
     private Thread thread;
 
     @Builder
-    public Reference(String referenceLink, String referenceDescription, Thread thread) {
+    public Reference(String referenceLink, String referenceDescription) {
         this.referenceLink = referenceLink;
         this.referenceDescription = referenceDescription;
-        this.thread = thread;
     }
 
     public void addThread(Thread thread) {

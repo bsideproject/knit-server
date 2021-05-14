@@ -35,22 +35,22 @@ public class AdminController {
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<ThreadAdminResDto>> getAllThreadList() {
+    public ResponseEntity<CommonResponse<List<ThreadAdminResDto>>> getAllThreadList() {
         return new ResponseEntity<>(adminService.getAllThreadList(), HttpStatus.OK);
     }
 
     @GetMapping("/waiting")
-    public ResponseEntity<List<ThreadAdminResDto>> getWaitingThreadList() {
+    public ResponseEntity<CommonResponse<List<ThreadAdminResDto>>> getWaitingThreadList() {
         return new ResponseEntity<>(adminService.getThreadListByStatus("대기"), HttpStatus.OK);
     }
 
     @GetMapping("/accepted")
-    public ResponseEntity<List<ThreadAdminResDto>> getAcceptedThreadList() {
+    public ResponseEntity<CommonResponse<List<ThreadAdminResDto>>> getAcceptedThreadList() {
         return new ResponseEntity<>(adminService.getThreadListByStatus("승인"), HttpStatus.OK);
     }
 
     @GetMapping("/declined")
-    public ResponseEntity<List<ThreadAdminResDto>> getDeclinedThreadList() {
+    public ResponseEntity<CommonResponse<List<ThreadAdminResDto>>> getDeclinedThreadList() {
         return new ResponseEntity<>(adminService.getThreadListByStatus("반려"), HttpStatus.OK);
     }
 }

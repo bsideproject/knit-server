@@ -7,7 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface ThreadRepository extends JpaRepository<Thread, Long> {
-    List<Thread> findAllByStatusAndTagListIn(String status, List<Tag> tagList);
+    List<Thread> findAllByStatusAndTagsIn(String status, List<Tag> tags);
     List<Thread> findAllByStatusOrderByModifiedDateDesc(String status);
     Thread findByIdAndStatus(Long id, String status);
 }
