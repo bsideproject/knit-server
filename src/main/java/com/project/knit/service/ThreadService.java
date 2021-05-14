@@ -46,14 +46,14 @@ public class ThreadService {
     private final S3Service s3Service;
     private final AdminService adminService;
 
-//    public <T> CommonResponse<T> checkTagName(String tagName) {
-//        Tag tag = tagRepository.findByTagName(tagName);
-//        if (tag != null) {
-//            return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "Tag Name Already Exists.");
-//        } else {
-//            return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Available Tag Name.");
-//        }
-//    }
+    public <T> CommonResponse<T> checkTagName(String tagName) {
+        Tag tag = tagRepository.findByTagName(tagName);
+        if (tag != null) {
+            return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "Tag Name Already Exists.");
+        } else {
+            return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Available Tag Name.");
+        }
+    }
 
     @Transactional
     public CommonResponse<ThreadResDto> getThreadInfoById(Long id) {
