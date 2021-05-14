@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.validation.Valid;
 import java.io.IOException;
 import java.util.List;
 
@@ -42,12 +43,12 @@ public class ThreadController {
     }
 
     @PostMapping("/v1/threads/register")
-    public ResponseEntity<CommonResponse> registerThread(@RequestBody ThreadCreateReqDto threadCreateReqDto) {
+    public ResponseEntity<CommonResponse> registerThread(@Valid @RequestBody ThreadCreateReqDto threadCreateReqDto) {
         return new ResponseEntity<>(threadService.registerThread(threadCreateReqDto), HttpStatus.OK);
     }
 
 //    @PostMapping("/v1/threads/update/{threadId}")
-//    public ResponseEntity<CommonResponse> updateRegisterThread(@PathVariable Long threadId, @RequestBody ThreadUpdateReqDto threadUpdateReqDto) {
+//    public ResponseEntity<CommonResponse> updateRegisterThread(@PathVariable Long threadId, @Valid @RequestBody ThreadUpdateReqDto threadUpdateReqDto) {
 //        return new ResponseEntity<>(threadService.updateRegisterThread(threadId, threadUpdateReqDto), HttpStatus.OK);
 //    }
 
