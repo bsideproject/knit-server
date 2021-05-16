@@ -50,7 +50,7 @@ public class S3Service {
     }
 
     public S3ImageResDto upload(MultipartFile multipartFile, String type) throws IOException {
-        String fileExtension = FilenameUtils.getExtension(multipartFile.getOriginalFilename());
+        String fileExtension = FilenameUtils.getExtension(multipartFile.getOriginalFilename()).toLowerCase();
         log.info("fileExtension : {}", fileExtension);
         log.info("file size in MB : {}", convertMultiPartToFile(multipartFile).length() / (1024 * 1024));
         if (!validateFileExtension(fileExtension)) {
