@@ -1,14 +1,10 @@
 package com.project.knit.controller;
 
 import com.project.knit.dto.req.ThreadCreateReqDto;
-import com.project.knit.dto.res.CategoryResDto;
-import com.project.knit.dto.res.CommonResponse;
-import com.project.knit.dto.res.S3ImageResDto;
-import com.project.knit.dto.res.TagResDto;
-import com.project.knit.dto.res.ThreadListResDto;
-import com.project.knit.dto.res.ThreadResDto;
+import com.project.knit.dto.res.*;
 import com.project.knit.service.S3Service;
 import com.project.knit.service.ThreadService;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -36,6 +32,12 @@ public class ThreadController {
 
     private final ThreadService threadService;
     private final S3Service s3Service;
+
+    @GetMapping("/v1/threads/list")
+    public ResponseEntity<CommonResponse<ThreadShortListResDto>> getThreadInfoList() {
+        return new ResponseEntity<>(threadService.getThreadInfoList(), HttpStatus.OK);
+    }
+
 
     @GetMapping("/thread/{threadId}")
     public ResponseEntity<CommonResponse<ThreadResDto>> getThreadInfoById(@PathVariable Long threadId) {

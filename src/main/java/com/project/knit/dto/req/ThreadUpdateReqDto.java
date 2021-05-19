@@ -23,7 +23,7 @@ public class ThreadUpdateReqDto {
     @NotNull(message = "At least one content is required.")
     private List<Content> contents;
     @NotNull(message = "At least one tag is required.")
-    private List<Tag> tags;
+    private List<TagReqDto> tags;
     @NotNull(message = "At least one category is required.")
     private List<Category> categories;
     private List<Reference> references;

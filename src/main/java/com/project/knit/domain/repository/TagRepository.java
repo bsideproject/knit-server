@@ -8,4 +8,5 @@ import java.util.List;
 public interface TagRepository extends JpaRepository<Tag, Long> {
     Tag findByTagName(String tagName);
     List<Tag> findAllByThreadId(Long threadId);
+    void deleteAllByThreadId(Long threadId);
 }

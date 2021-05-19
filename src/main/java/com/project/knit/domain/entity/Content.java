@@ -35,16 +35,19 @@ public class Content extends TimeEntity {
 
     private String summary;
 
+    private Integer sequence;
+
     @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "thread_id")
     private Thread thread;
 
     @Builder
-    public Content(String contentType, String value, String summary) {
+    public Content(String contentType, String value, String summary, Integer sequence) {
         this.contentType = contentType.toUpperCase();
         this.value = value;
         this.summary = summary;
+        this.sequence = sequence;
     }
 
     public void addThread(Thread thread) {

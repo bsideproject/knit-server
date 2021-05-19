@@ -9,7 +9,9 @@ import java.util.List;
 @Setter
 @Getter
 @NoArgsConstructor
-public class ThreadListResDto {
-    private Integer count;
-    private List<ThreadResDto> threads;
+public class ThreadShortResDto {
+    private Long threadId;
+    private String threadTitle;
+    private String threadSubTitle;
+    private String thumbnailUrl;
 }

@@ -25,17 +25,14 @@ public class Category extends TimeEntity {
 
     private String category;
 
-    private String description;
-
     @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "thread_id")
     private Thread thread;
 
     @Builder
-    public Category(String category, String description) {
+    public Category(String category) {
         this.category = category;
-        this.description = description;
     }
 
     public void addThread(Thread thread) {

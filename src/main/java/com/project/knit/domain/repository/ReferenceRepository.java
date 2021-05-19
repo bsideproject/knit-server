@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface ReferenceRepository extends JpaRepository<Reference, Long> {
     List<Reference> findAllByThreadId(Long threadId);
+    void deleteAllByThreadId(Long threadId);
 }

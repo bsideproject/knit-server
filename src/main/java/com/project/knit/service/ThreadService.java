@@ -14,16 +14,10 @@ import com.project.knit.domain.repository.TagRepository;
 import com.project.knit.domain.repository.ThreadRepository;
 import com.project.knit.dto.req.ThreadCreateReqDto;
 import com.project.knit.dto.req.ThreadUpdateReqDto;
-import com.project.knit.dto.res.CategoryResDto;
-import com.project.knit.dto.res.CommonResponse;
-import com.project.knit.dto.res.ContentResDto;
-import com.project.knit.dto.res.ReferenceResDto;
-import com.project.knit.dto.res.TagResDto;
-import com.project.knit.dto.res.ThreadAdminResDto;
-import com.project.knit.dto.res.ThreadListResDto;
-import com.project.knit.dto.res.ThreadResDto;
+import com.project.knit.dto.res.*;
 import com.project.knit.utils.enums.StatusCodeEnum;
 import com.project.knit.utils.enums.ThreadStatus;
+import com.project.knit.utils.enums.ThreadType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -45,6 +39,25 @@ public class ThreadService {
 
     private final S3Service s3Service;
     private final AdminService adminService;
+
+    public CommonResponse<ThreadShortListResDto> getThreadInfoList() {
+        ThreadShortListResDto resDto = new ThreadShortListResDto();
+        List<ThreadShortResDto> shortResDtos = new ArrayList<>();
+        List<Thread> threads = threadRepository.findAllByStatusOrderByModifiedDateDesc(ThreadStatus.승인.name());
+        threads.forEach(t -> {
+            ThreadShortResDto shortResDto = new ThreadShortResDto();
+            shortResDto.setThreadId(t.getId());
+            shortResDto.setThreadTitle(t.getThreadTitle());
+            shortResDto.setThreadSubTitle(t.getThreadSubTitle());
+            shortResDto.setThumbnailUrl(t.getThumbnailUrl());
+
+            shortResDtos.add(shortResDto);
+        });
+        resDto.setCount(threads.size());
+        resDto.setThreads(shortResDtos);
+
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread List Found.", resDtoList);
+    }
 
     public <T> CommonResponse<T> checkTagName(String tagName) {
         Tag tag = tagRepository.findByTagName(tagName);
@@ -92,7 +105,7 @@ public class ThreadService {
         for (Tag t : tags) {
             TagResDto res = new TagResDto();
             res.setTagId(t.getId());
-            res.setTag(t.getTagName());
+            res.setValue(t.getTagName());
 
             tagResList.add(res);
         }
@@ -127,11 +140,11 @@ public class ThreadService {
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-//        if (threadCreateReqDto.getTags() != null) {
-//            threadCreateReqDto.getTags().forEach(t -> {
-//                checkTagName(t);
-//            });
-//        }
+        if (!threadCreateReqDto.getTags().isEmpty()) {
+            threadCreateReqDto.getTags().forEach(t -> {
+                checkTagName(t.getValue());
+            });
+        }
 
         Thread thread = Thread.builder()
                 .threadTitle(threadCreateReqDto.getTitle())
@@ -146,9 +159,10 @@ public class ThreadService {
         List<Content> contents = new ArrayList<>();
         threadCreateReqDto.getContents().forEach(c -> {
             Content content = Content.builder()
-                    .contentType(c.getContentType())
+                    .contentType(c.getType())
                     .value(c.getValue())
                     .summary(c.getSummary() == null ? null : c.getSummary())
+                    .sequence(c.getSequence())
                     .build();
 
             Content createdContent = contentRepository.save(content);
@@ -159,7 +173,7 @@ public class ThreadService {
         List<Tag> tags = new ArrayList<>();
         threadCreateReqDto.getTags().forEach(t -> {
             Tag tag = Tag.builder()
-                    .tagName(t)
+                    .tagName(t.getValue())
                     .build();
 
             Tag createdTag = tagRepository.save(tag);
@@ -170,8 +184,7 @@ public class ThreadService {
         List<Category> categories = new ArrayList<>();
         threadCreateReqDto.getCategories().forEach(c -> {
             Category category = Category.builder()
-                    .category(c.getCategory())
-                    .description(c.getDescription() == null ? null : c.getDescription())
+                    .category(c.getValue())
                     .build();
 
             Category createdCategory = categoryRepository.save(category);
@@ -205,9 +218,11 @@ public class ThreadService {
             return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "Thread to update Not Found.");
         }
 
-        findThread.update(findThread, threadUpdateReqDto.getSubTitle(), threadUpdateReqDto.getThumbnailUrl(), threadUpdateReqDto.getSummary());
+        findThread.update(threadUpdateReqDto.getSubTitle(), threadUpdateReqDto.getThumbnailUrl(), threadUpdateReqDto.getSummary());
 
+        Long findThreadId = findThread.getId();
         if (threadUpdateReqDto.getContents() != null) {
+            contentRepository.deleteAllByThreadId(findThread.getId());
             List<Content> contents = new ArrayList<>();
             threadUpdateReqDto.getContents().forEach(c -> {
                 Content content = Content.builder()
@@ -220,39 +235,44 @@ public class ThreadService {
                 createdContent.addThread(findThread);
                 contents.add(createdContent);
             });
+            contentRepository.saveAll(contents);
             findThread.updateContents(contents);
         }
 
         if (threadUpdateReqDto.getTags() != null) {
+            tagRepository.deleteAllByThreadId(findThreadId);
             List<Tag> tags = new ArrayList<>();
             threadUpdateReqDto.getTags().forEach(t -> {
                 Tag tag = Tag.builder()
-                        .tagName(t.getTagName())
+                        .tagName(t.getValue())
                         .build();
 
                 Tag createdTag = tagRepository.save(tag);
                 createdTag.addThread(findThread);
                 tags.add(createdTag);
             });
+            tagRepository.saveAll(tags);
             findThread.updateTags(tags);
         }
 
         if (threadUpdateReqDto.getCategories() != null) {
+            categoryRepository.deleteAllByThreadId(findThreadId);
             List<Category> categories = new ArrayList<>();
             threadUpdateReqDto.getCategories().forEach(c -> {
                 Category category = Category.builder()
                         .category(c.getCategory())
-                        .description(c.getDescription() == null ? null : c.getDescription())
                         .build();
 
                 Category createdCategory = categoryRepository.save(category);
                 createdCategory.addThread(findThread);
                 categories.add(createdCategory);
             });
+            categoryRepository.saveAll(categories);
             findThread.updateCategories(categories);
         }
 
         if (threadUpdateReqDto.getReferences() != null) {
+            referenceRepository.deleteAllByThreadId(findThreadId);
             List<Reference> references = new ArrayList<>();
             threadUpdateReqDto.getReferences().forEach(r -> {
                 Reference reference = Reference.builder()
@@ -263,6 +283,7 @@ public class ThreadService {
                 Reference createdReference = referenceRepository.save(reference);
                 createdReference.addThread(findThread);
             });
+            referenceRepository.saveAll(references);
             findThread.updateReferences(references);
         }
 
@@ -274,11 +295,11 @@ public class ThreadService {
         Tag tag = tagRepository.findById(tagId).orElse(null);
         List<Tag> tagList = new ArrayList<>();
         tagList.add(tag);
-        List<ThreadAdminResDto> resDtoList = new ArrayList<>();
+        List<ThreadResDto> resDtoList = new ArrayList<>();
 
         List<Thread> threadList = threadRepository.findAllByStatusAndTagsIn("승인", tagList);
         for (Thread t : threadList) {
-            ThreadAdminResDto res = new ThreadAdminResDto();
+            ThreadResDto res = new ThreadResDto();
             res.setThreadId(t.getId());
             res.setThreadTitle(t.getThreadTitle());
             res.setThreadSubTitle(t.getThreadSubTitle());
@@ -307,7 +328,7 @@ public class ThreadService {
             t.getTags().forEach(tr -> {
                 TagResDto tagRes = new TagResDto();
                 tagRes.setTagId(tr.getId());
-                tagRes.setTag(tr.getTagName());
+                tagRes.setValue(tr.getTagName());
 
                 tagResList.add(tagRes);
             });
@@ -322,8 +343,6 @@ public class ThreadService {
                 referenceList.add(referenceRes);
             });
             res.setReferences(referenceList);
-            res.setStatus(t.getStatus());
-            res.setNickname("닉네임테스트");
 
             resDtoList.add(res);
         }
@@ -340,7 +359,7 @@ public class ThreadService {
         tags.forEach(tag -> {
             TagResDto res = new TagResDto();
             res.setTagId(tag.getId());
-            res.setTag(tag.getTagName());
+            res.setValue(tag.getTagName());
 
             resDtos.add(res);
         });

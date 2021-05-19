@@ -10,7 +10,7 @@ import javax.validation.constraints.NotBlank;
 @NoArgsConstructor
 @Setter
 @Getter
-public class CategoryReqDto {
-    @NotBlank(message = "Category Value is required.")
+public class TagReqDto {
+    @NotBlank(message = "Tag Value is required.")
     private String value;
 }

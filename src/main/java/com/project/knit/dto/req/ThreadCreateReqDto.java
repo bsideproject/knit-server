@@ -21,7 +21,7 @@ public class ThreadCreateReqDto {
     @NotNull(message = "At least one content is required.")
     private List<ContentReqDto> contents;
     @NotNull(message = "At least one tag is required.")
-    private List<String> tags;
+    private List<TagReqDto> tags;
     @NotNull(message = "At least one category is required.")
     private List<CategoryReqDto> categories;
     private List<ReferenceReqDto> references;

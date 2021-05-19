@@ -84,10 +84,10 @@ public class Thread extends TimeEntity {
         this.references.addAll(references);
     }
 
-    public void update(Thread originalThread, String threadSubTitle, String thumbnailUrl, String threadSummary) {
-        this.threadSubTitle = threadSubTitle == null ? originalThread.getThreadSubTitle() : threadSubTitle;
-        this.thumbnailUrl = thumbnailUrl == null ? originalThread.getThumbnailUrl() : thumbnailUrl;
-        this.threadSummary = threadSummary == null ? originalThread.getThreadSummary() : threadSummary;
+    public void update(String threadSubTitle, String thumbnailUrl, String threadSummary) {
+        this.threadSubTitle = threadSubTitle;
+        this.thumbnailUrl = thumbnailUrl;
+        this.threadSummary = threadSummary;
     }
 
     public void updateContents(List<Content> contents) {

@@ -9,5 +9,5 @@ import lombok.Setter;
 @NoArgsConstructor
 public class TagResDto {
     private Long tagId;
-    private String tag;
+    private String value;
 }
