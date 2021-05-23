@@ -56,7 +56,7 @@ public class ThreadService {
         resDto.setCount(threads.size());
         resDto.setThreads(shortResDtos);
 
-        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread List Found.", resDtoList);
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread List Found.", resDto);
     }
 
     public <T> CommonResponse<T> checkTagName(String tagName) {
@@ -76,7 +76,7 @@ public class ThreadService {
         }
         Long threadId = thread.getId();
 
-        List<Content> contents = contentRepository.findAllByThreadId(threadId);
+        List<Content> contents = contentRepository.findAllByThreadIdOrderBySequence(threadId);
         List<Category> categories = categoryRepository.findAllByThreadId(threadId);
         List<Tag> tags = tagRepository.findAllByThreadId(threadId);
         List<Reference> references = referenceRepository.findAllByThreadId(threadId);
@@ -226,7 +226,7 @@ public class ThreadService {
             List<Content> contents = new ArrayList<>();
             threadUpdateReqDto.getContents().forEach(c -> {
                 Content content = Content.builder()
-                        .contentType(c.getContentType())
+                        .contentType(c.getType())
                         .value(c.getValue())
                         .summary(c.getSummary() == null ? null : c.getSummary())
                         .build();
@@ -260,7 +260,7 @@ public class ThreadService {
             List<Category> categories = new ArrayList<>();
             threadUpdateReqDto.getCategories().forEach(c -> {
                 Category category = Category.builder()
-                        .category(c.getCategory())
+                        .category(c.getValue())
                         .build();
 
                 Category createdCategory = categoryRepository.save(category);
@@ -305,7 +305,8 @@ public class ThreadService {
             res.setThreadSubTitle(t.getThreadSubTitle());
             res.setThumbnailUrl(t.getThumbnailUrl());
             List<ContentResDto> contentList = new ArrayList<>();
-            t.getContents().forEach(c -> {
+            List<Content> contents = contentRepository.findAllByThreadIdOrderBySequence(t.getId());
+            contents.forEach(c -> {
                 ContentResDto contentRes = new ContentResDto();
                 contentRes.setContentId(c.getId());
                 contentRes.setType(c.getContentType());

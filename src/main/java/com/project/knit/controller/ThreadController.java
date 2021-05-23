@@ -1,6 +1,7 @@
 package com.project.knit.controller;
 
 import com.project.knit.dto.req.ThreadCreateReqDto;
+import com.project.knit.dto.req.ThreadUpdateReqDto;
 import com.project.knit.dto.res.*;
 import com.project.knit.service.S3Service;
 import com.project.knit.service.ThreadService;
@@ -49,10 +50,10 @@ public class ThreadController {
         return new ResponseEntity<>(threadService.registerThread(threadCreateReqDto), HttpStatus.OK);
     }
 
-//    @PostMapping("/v1/threads/update/{threadId}")
-//    public ResponseEntity<CommonResponse> updateRegisterThread(@PathVariable Long threadId, @Valid @RequestBody ThreadUpdateReqDto threadUpdateReqDto) {
-//        return new ResponseEntity<>(threadService.updateRegisterThread(threadId, threadUpdateReqDto), HttpStatus.OK);
-//    }
+    @PostMapping("/v1/threads/update/{threadId}")
+    public ResponseEntity<CommonResponse> updateRegisterThread(@PathVariable Long threadId, @Valid @RequestBody ThreadUpdateReqDto threadUpdateReqDto) {
+        return new ResponseEntity<>(threadService.updateThread(threadId, threadUpdateReqDto), HttpStatus.OK);
+    }
 
     @GetMapping("/v1/threads/tag/{tagId}")
     public ResponseEntity<CommonResponse<ThreadListResDto>> getThreadListByTagId(@PathVariable Long tagId) {

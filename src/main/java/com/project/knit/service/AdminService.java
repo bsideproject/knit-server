@@ -77,7 +77,7 @@ public class AdminService {
             t.getTags().forEach(tag -> {
                 TagResDto tagRes = new TagResDto();
                 tagRes.setTagId(tag.getId());
-                tagRes.setTag(tag.getTagName());
+                tagRes.setValue(tag.getTagName());
 
                 tagList.add(tagRes);
             });
@@ -136,7 +136,7 @@ public class AdminService {
             t.getTags().forEach(tag -> {
                 TagResDto tagRes = new TagResDto();
                 tagRes.setTagId(tag.getId());
-                tagRes.setTag(tag.getTagName());
+                tagRes.setValue(tag.getTagName());
 
                 tagList.add(tagRes);
             });

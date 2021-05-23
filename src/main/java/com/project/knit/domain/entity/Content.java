@@ -31,6 +31,7 @@ public class Content extends TimeEntity {
 
     private String contentType;
 
+    @Column(columnDefinition = "TEXT")
     private String value;
 
     private String summary;
