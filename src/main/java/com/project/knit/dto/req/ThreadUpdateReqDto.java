@@ -16,15 +16,17 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 public class ThreadUpdateReqDto {
+    private Long id;
+    private String title;
     @NotBlank(message = "Thread SubTitle is required.")
     private String subTitle;
     private String thumbnailUrl;
     private String summary;
     @NotNull(message = "At least one content is required.")
-    private List<ContentReqDto> contents;
+    private List<ContentUpdateReqDto> contents;
     @NotNull(message = "At least one tag is required.")
-    private List<TagReqDto> tags;
+    private List<TagUpdateReqDto> tags;
     @NotNull(message = "At least one category is required.")
-    private List<CategoryReqDto> categories;
-    private List<ReferenceReqDto> references;
+    private List<CategoryUpdateReqDto> categories;
+    private List<ReferenceUpdateReqDto> references;
 }

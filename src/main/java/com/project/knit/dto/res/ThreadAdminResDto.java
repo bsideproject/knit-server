@@ -11,10 +11,10 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 public class ThreadAdminResDto {
-    private Long threadId;
+    private Long id;
     private String nickname;
-    private String threadTitle;
-    private String threadSubTitle;
+    private String title;
+    private String subTitle;
     private String thumbnailUrl;
     private List<ContentResDto> contents;
     private List<TagResDto> tags;

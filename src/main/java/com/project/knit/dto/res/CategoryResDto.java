@@ -9,5 +9,5 @@ import lombok.Setter;
 @NoArgsConstructor
 public class CategoryResDto {
     private Long categoryId;
-    private String category;
+    private String value;
 }

@@ -10,8 +10,8 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 public class ThreadShortResDto {
-    private Long threadId;
-    private String threadTitle;
-    private String threadSubTitle;
+    private Long id;
+    private String title;
+    private String subTitle;
     private String thumbnailUrl;
 }

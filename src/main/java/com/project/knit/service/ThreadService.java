@@ -46,9 +46,9 @@ public class ThreadService {
         List<Thread> threads = threadRepository.findAllByStatusOrderByModifiedDateDesc(ThreadStatus.승인.name());
         threads.forEach(t -> {
             ThreadShortResDto shortResDto = new ThreadShortResDto();
-            shortResDto.setThreadId(t.getId());
-            shortResDto.setThreadTitle(t.getThreadTitle());
-            shortResDto.setThreadSubTitle(t.getThreadSubTitle());
+            shortResDto.setId(t.getId());
+            shortResDto.setTitle(t.getThreadTitle());
+            shortResDto.setSubTitle(t.getThreadSubTitle());
             shortResDto.setThumbnailUrl(t.getThumbnailUrl());
 
             shortResDtos.add(shortResDto);
@@ -98,7 +98,7 @@ public class ThreadService {
         for (Category c : categories) {
             CategoryResDto res = new CategoryResDto();
             res.setCategoryId(c.getId());
-            res.setCategory(c.getCategory());
+            res.setValue(c.getCategory());
 
             categoryResList.add(res);
         }
@@ -123,9 +123,9 @@ public class ThreadService {
         resDto.setContents(contentResList);
         resDto.setReferences(referenceResList);
         resDto.setTags(tagResList);
-        resDto.setThreadId(thread.getId());
-        resDto.setThreadTitle(thread.getThreadTitle());
-        resDto.setThreadSubTitle(thread.getThreadSubTitle());
+        resDto.setId(thread.getId());
+        resDto.setTitle(thread.getThreadTitle());
+        resDto.setSubTitle(thread.getThreadSubTitle());
         resDto.setThumbnailUrl(thread.getThumbnailUrl());
 
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread Found.", resDto);
@@ -300,9 +300,9 @@ public class ThreadService {
         List<Thread> threadList = threadRepository.findAllByStatusAndTagsIn("승인", tagList);
         for (Thread t : threadList) {
             ThreadResDto res = new ThreadResDto();
-            res.setThreadId(t.getId());
-            res.setThreadTitle(t.getThreadTitle());
-            res.setThreadSubTitle(t.getThreadSubTitle());
+            res.setId(t.getId());
+            res.setTitle(t.getThreadTitle());
+            res.setSubTitle(t.getThreadSubTitle());
             res.setThumbnailUrl(t.getThumbnailUrl());
             List<ContentResDto> contentList = new ArrayList<>();
             List<Content> contents = contentRepository.findAllByThreadIdOrderBySequence(t.getId());
@@ -320,7 +320,7 @@ public class ThreadService {
             t.getCategories().forEach(c -> {
                 CategoryResDto categoryRes = new CategoryResDto();
                 categoryRes.setCategoryId(c.getId());
-                categoryRes.setCategory(c.getCategory());
+                categoryRes.setValue(c.getCategory());
 
                 categoryList.add(categoryRes);
             });
@@ -373,7 +373,7 @@ public class ThreadService {
         categories.forEach(c -> {
             CategoryResDto res = new CategoryResDto();
             res.setCategoryId(c.getId());
-            res.setCategory(c.getCategory());
+            res.setValue(c.getCategory());
 
             resDtos.add(res);
         });

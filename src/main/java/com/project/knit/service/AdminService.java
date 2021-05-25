@@ -27,6 +27,7 @@ public class AdminService {
         thread.changeStatus(ThreadStatus.승인.name());
 
         threadRepository.save(thread);
+        // todo
         // ThreadCategory save
         // ThreadTag save
         // ThreadReference save
@@ -49,9 +50,9 @@ public class AdminService {
 
         for (Thread t : threadList) {
             ThreadAdminResDto res = new ThreadAdminResDto();
-            res.setThreadId(t.getId());
-            res.setThreadTitle(t.getThreadTitle());
-            res.setThreadSubTitle(t.getThreadSubTitle());
+            res.setId(t.getId());
+            res.setTitle(t.getThreadTitle());
+            res.setSubTitle(t.getThreadSubTitle());
             res.setThumbnailUrl(t.getThumbnailUrl());
             List<ContentResDto> contentList = new ArrayList<>();
             t.getContents().forEach(c -> {
@@ -68,7 +69,7 @@ public class AdminService {
             t.getCategories().forEach(c -> {
                 CategoryResDto categoryRes = new CategoryResDto();
                 categoryRes.setCategoryId(c.getId());
-                categoryRes.setCategory(c.getCategory());
+                categoryRes.setValue(c.getCategory());
 
                 categoryList.add(categoryRes);
             });
@@ -108,9 +109,9 @@ public class AdminService {
 
         for (Thread t : threadList) {
             ThreadAdminResDto res = new ThreadAdminResDto();
-            res.setThreadId(t.getId());
-            res.setThreadTitle(t.getThreadTitle());
-            res.setThreadSubTitle(t.getThreadSubTitle());
+            res.setId(t.getId());
+            res.setTitle(t.getThreadTitle());
+            res.setSubTitle(t.getThreadSubTitle());
             res.setThumbnailUrl(t.getThumbnailUrl());
             List<ContentResDto> contentList = new ArrayList<>();
             t.getContents().forEach(c -> {
@@ -127,7 +128,7 @@ public class AdminService {
             t.getCategories().forEach(c -> {
                 CategoryResDto categoryRes = new CategoryResDto();
                 categoryRes.setCategoryId(c.getId());
-                categoryRes.setCategory(c.getCategory());
+                categoryRes.setValue(c.getCategory());
 
                 categoryList.add(categoryRes);
             });
