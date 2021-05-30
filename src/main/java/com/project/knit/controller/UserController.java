@@ -34,4 +34,12 @@ public class UserController {
         // todo code를 user table에 저장
         return userService.requestAccessToken(socialLoginType, code);
     }
+
+    // login + create profile
+
+    // logout
+
+    // getProfileInfo
+
+    //
 }

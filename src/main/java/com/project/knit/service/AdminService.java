@@ -1,7 +1,13 @@
 package com.project.knit.service;
 
 import com.project.knit.domain.entity.Thread;
+import com.project.knit.domain.entity.ThreadCategory;
+import com.project.knit.domain.entity.ThreadReference;
+import com.project.knit.domain.entity.ThreadTag;
+import com.project.knit.domain.repository.ThreadCategoryRepository;
+import com.project.knit.domain.repository.ThreadReferenceRepository;
 import com.project.knit.domain.repository.ThreadRepository;
+import com.project.knit.domain.repository.ThreadTagRepository;
 import com.project.knit.dto.res.CategoryResDto;
 import com.project.knit.dto.res.CommonResponse;
 import com.project.knit.dto.res.ContentResDto;
@@ -21,16 +27,34 @@ import java.util.List;
 public class AdminService {
 
     private final ThreadRepository threadRepository;
+    private final ThreadCategoryRepository threadCategoryRepository;
+    private final ThreadTagRepository threadTagRepository;
+    private final ThreadReferenceRepository threadReferenceRepository;
+
 
     public <T> CommonResponse<T> acceptThread(Long threadId) {
         Thread thread = threadRepository.findById(threadId).orElseThrow(() -> new NullPointerException("Thread Info Not Found."));
         thread.changeStatus(ThreadStatus.승인.name());
 
-        threadRepository.save(thread);
-        // todo
+        Thread acceptedThreaad = threadRepository.save(thread);
         // ThreadCategory save
-        // ThreadTag save
-        // ThreadReference save
+        acceptedThreaad.getCategories().forEach(c -> {
+            ThreadCategory threadCategory = ThreadCategory.builder()
+                    .threadId(acceptedThreaad.getId())
+                    .categoryId(c.getId())
+                    .build();
+
+            threadCategoryRepository.save(threadCategory);
+        });
+
+        acceptedThreaad.getTags().forEach(t -> {
+            ThreadTag threadTag = ThreadTag.builder()
+                    .threadId(acceptedThreaad.getId())
+                    .tagId(t.getId())
+                    .build();
+
+            threadTagRepository.save(threadTag);
+        });
 
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "[ADMIN] Thread Successfully Created.");
     }

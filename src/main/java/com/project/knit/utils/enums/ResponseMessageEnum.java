@@ -2,6 +2,14 @@ package com.project.knit.utils.enums;
 
 public enum ResponseMessageEnum {
 
+    // THREAD
+
+
+    // USER
+
+
+    // PROFILE
+
     SUCCESS("Success"),
     FAIL("Fail");
 

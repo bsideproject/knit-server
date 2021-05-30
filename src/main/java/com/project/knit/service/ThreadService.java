@@ -151,7 +151,7 @@ public class ThreadService {
                 .threadSubTitle(threadCreateReqDto.getSubTitle())
                 .thumbnailUrl(threadCreateReqDto.getThumbnailUrl())
                 .threadSummary(threadCreateReqDto.getSummary())
-                .status(ThreadStatus.생성대기.name())
+                .status(ThreadStatus.대기.name())
                 .build();
 
         Thread createdThread = threadRepository.save(thread);
