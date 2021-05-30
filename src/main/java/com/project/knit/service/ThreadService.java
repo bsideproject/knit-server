@@ -140,11 +140,6 @@ public class ThreadService {
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-//        if (!threadCreateReqDto.getTags().isEmpty()) {
-//            threadCreateReqDto.getTags().forEach(t -> {
-//                checkTagName(t.getValue());
-//            });
-//        }
 
         Thread thread = Thread.builder()
                 .threadTitle(threadCreateReqDto.getTitle())
@@ -170,15 +165,21 @@ public class ThreadService {
             contents.add(createdContent);
         });
 
+        // TODO TAG table에 THREAD 없애기, TAG는 그 자체로 관리. 이 경우 ADMIN ACCEPT할 때 TAG를 모를 수 있음.
         List<Tag> tags = new ArrayList<>();
         threadCreateReqDto.getTags().forEach(t -> {
-            Tag tag = Tag.builder()
-                    .tagName(t.getValue())
-                    .build();
+            Tag findTag = tagRepository.findByTagName(t.getValue());
+            if (findTag == null) {
+                Tag tag = Tag.builder()
+                        .tagName(t.getValue())
+                        .build();
 
-            Tag createdTag = tagRepository.save(tag);
-            createdTag.addThread(createdThread);
-            tags.add(createdTag);
+                Tag createdTag = tagRepository.save(tag);
+                createdTag.addThread(createdThread);
+                tags.add(createdTag);
+            } else {
+                tags.add(findTag);
+            }
         });
 
         List<Category> categories = new ArrayList<>();
