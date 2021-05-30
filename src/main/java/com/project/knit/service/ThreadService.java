@@ -193,15 +193,17 @@ public class ThreadService {
         });
 
         List<Reference> references = new ArrayList<>();
-        threadCreateReqDto.getReferences().forEach(r -> {
-            Reference reference = Reference.builder()
-                    .referenceLink(r.getReferenceLink())
-                    .referenceDescription(r.getReferenceDescription())
-                    .build();
+        if (threadCreateReqDto.getReferences() != null && !threadCreateReqDto.getReferences().isEmpty()) {
+            threadCreateReqDto.getReferences().forEach(r -> {
+                Reference reference = Reference.builder()
+                        .referenceLink(r.getReferenceLink())
+                        .referenceDescription(r.getReferenceDescription())
+                        .build();
 
-            Reference createdReference = referenceRepository.save(reference);
-            createdReference.addThread(createdThread);
-        });
+                Reference createdReference = referenceRepository.save(reference);
+                createdReference.addThread(createdThread);
+            });
+        }
 
         createdThread.addContents(contents);
         createdThread.addTags(tags);
