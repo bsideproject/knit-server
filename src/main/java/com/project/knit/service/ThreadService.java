@@ -140,11 +140,11 @@ public class ThreadService {
         } catch (JsonProcessingException e) {
             e.printStackTrace();
         }
-        if (!threadCreateReqDto.getTags().isEmpty()) {
-            threadCreateReqDto.getTags().forEach(t -> {
-                checkTagName(t.getValue());
-            });
-        }
+//        if (!threadCreateReqDto.getTags().isEmpty()) {
+//            threadCreateReqDto.getTags().forEach(t -> {
+//                checkTagName(t.getValue());
+//            });
+//        }
 
         Thread thread = Thread.builder()
                 .threadTitle(threadCreateReqDto.getTitle())
