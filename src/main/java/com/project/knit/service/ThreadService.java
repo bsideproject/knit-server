@@ -37,9 +37,6 @@ public class ThreadService {
     private final CategoryRepository categoryRepository;
     private final ReferenceRepository referenceRepository;
 
-    private final S3Service s3Service;
-    private final AdminService adminService;
-
     public CommonResponse<ThreadShortListResDto> getThreadInfoList() {
         ThreadShortListResDto resDto = new ThreadShortListResDto();
         List<ThreadShortResDto> shortResDtos = new ArrayList<>();

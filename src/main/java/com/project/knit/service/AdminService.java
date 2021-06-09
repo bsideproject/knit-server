@@ -1,24 +1,15 @@
 package com.project.knit.service;
 
+import com.project.knit.domain.entity.*;
 import com.project.knit.domain.entity.Thread;
-import com.project.knit.domain.entity.ThreadCategory;
-import com.project.knit.domain.entity.ThreadReference;
-import com.project.knit.domain.entity.ThreadTag;
-import com.project.knit.domain.repository.ThreadCategoryRepository;
-import com.project.knit.domain.repository.ThreadReferenceRepository;
-import com.project.knit.domain.repository.ThreadRepository;
-import com.project.knit.domain.repository.ThreadTagRepository;
-import com.project.knit.dto.res.CategoryResDto;
-import com.project.knit.dto.res.CommonResponse;
-import com.project.knit.dto.res.ContentResDto;
-import com.project.knit.dto.res.ReferenceResDto;
-import com.project.knit.dto.res.TagResDto;
-import com.project.knit.dto.res.ThreadAdminResDto;
+import com.project.knit.domain.repository.*;
+import com.project.knit.dto.res.*;
 import com.project.knit.utils.enums.StatusCodeEnum;
 import com.project.knit.utils.enums.ThreadStatus;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,7 +21,10 @@ public class AdminService {
     private final ThreadCategoryRepository threadCategoryRepository;
     private final ThreadTagRepository threadTagRepository;
     private final ThreadReferenceRepository threadReferenceRepository;
-
+    private final ContentRepository contentRepository;
+    private final TagRepository tagRepository;
+    private final CategoryRepository categoryRepository;
+    private final ReferenceRepository referenceRepository;
 
     public <T> CommonResponse<T> acceptThread(Long threadId) {
         Thread thread = threadRepository.findById(threadId).orElseThrow(() -> new NullPointerException("Thread Info Not Found."));
@@ -184,5 +178,68 @@ public class AdminService {
         }
 
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "[ADMIN] All Thread List By Status.", resDtoList);
+    }
+
+    @Transactional
+    public CommonResponse<ThreadResDto> getThreadInfoById(Long id) {
+        Thread thread = threadRepository.findById(id).orElse(null);
+        if (thread == null) {
+            return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "Thread Not Found.");
+        }
+        Long threadId = thread.getId();
+
+        List<Content> contents = contentRepository.findAllByThreadIdOrderBySequence(threadId);
+        List<Category> categories = categoryRepository.findAllByThreadId(threadId);
+        List<Tag> tags = tagRepository.findAllByThreadId(threadId);
+        List<Reference> references = referenceRepository.findAllByThreadId(threadId);
+
+        List<ContentResDto> contentResList = new ArrayList<>();
+        List<CategoryResDto> categoryResList = new ArrayList<>();
+        List<TagResDto> tagResList = new ArrayList<>();
+        List<ReferenceResDto> referenceResList = new ArrayList<>();
+
+        for (Content c : contents) {
+            ContentResDto res = new ContentResDto();
+            res.setContentId(c.getId());
+            res.setType(c.getContentType());
+            res.setValue(c.getValue());
+            res.setSummary(c.getSummary() == null ? null : c.getSummary());
+
+            contentResList.add(res);
+        }
+        for (Category c : categories) {
+            CategoryResDto res = new CategoryResDto();
+            res.setCategoryId(c.getId());
+            res.setValue(c.getCategory());
+
+            categoryResList.add(res);
+        }
+        for (Tag t : tags) {
+            TagResDto res = new TagResDto();
+            res.setTagId(t.getId());
+            res.setValue(t.getTagName());
+
+            tagResList.add(res);
+        }
+        for (Reference r : references) {
+            ReferenceResDto res = new ReferenceResDto();
+            res.setReferenceId(r.getId());
+            res.setReferenceLink(r.getReferenceLink());
+            res.setReferenceDescription(r.getReferenceDescription());
+
+            referenceResList.add(res);
+        }
+
+        ThreadResDto resDto = new ThreadResDto();
+        resDto.setCategories(categoryResList);
+        resDto.setContents(contentResList);
+        resDto.setReferences(referenceResList);
+        resDto.setTags(tagResList);
+        resDto.setId(thread.getId());
+        resDto.setTitle(thread.getThreadTitle());
+        resDto.setSubTitle(thread.getThreadSubTitle());
+        resDto.setThumbnailUrl(thread.getThumbnailUrl());
+
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread Found.", resDto);
     }
 }

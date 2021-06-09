@@ -2,6 +2,7 @@ package com.project.knit.controller;
 
 import com.project.knit.dto.res.CommonResponse;
 import com.project.knit.dto.res.ThreadAdminResDto;
+import com.project.knit.dto.res.ThreadResDto;
 import com.project.knit.service.AdminService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,5 +53,10 @@ public class AdminController {
     @GetMapping("/declined")
     public ResponseEntity<CommonResponse<List<ThreadAdminResDto>>> getDeclinedThreadList() {
         return new ResponseEntity<>(adminService.getThreadListByStatus("반려"), HttpStatus.OK);
+    }
+
+    @GetMapping("/thread/{threadId}")
+    public ResponseEntity<CommonResponse<ThreadResDto>> getThreadInfoById(@PathVariable Long threadId) {
+        return new ResponseEntity<>(adminService.getThreadInfoById(threadId), HttpStatus.OK);
     }
 }
