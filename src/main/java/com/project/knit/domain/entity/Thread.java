@@ -55,6 +55,13 @@ public class Thread extends TimeEntity {
 
     private String status;
 
+    private Long viewCount;
+
+    private Long likeCount;
+
+    @Column(name = "is_featured", columnDefinition = "CHAR(1) DEFAULT 'N'")
+    private String isFeatured;
+
     @Builder
     public Thread(String threadTitle, String threadSubTitle, String thumbnailUrl, String threadSummary, String status) {
         this.threadTitle = threadTitle;
@@ -62,6 +69,7 @@ public class Thread extends TimeEntity {
         this.thumbnailUrl = thumbnailUrl;
         this.threadSummary = threadSummary;
         this.status = status;
+        this.isFeatured = "N";
     }
 
     public void changeStatus(String status) {
@@ -88,6 +96,22 @@ public class Thread extends TimeEntity {
         this.threadSubTitle = threadSubTitle;
         this.thumbnailUrl = thumbnailUrl;
         this.threadSummary = threadSummary;
+    }
+
+    public void addViewCount() {
+        this.viewCount += 1;
+    }
+
+    public void addLikeCount() {
+        this.likeCount += 1;
+    }
+
+    public void subtractLikeCount() {
+        this.likeCount -= 1;
+    }
+
+    public void feature() {
+        this.isFeatured = "Y";
     }
 
     public void updateContents(List<Content> contents) {

@@ -1,6 +1,7 @@
 package com.project.knit.controller;
 
 import com.project.knit.dto.req.ThreadCreateReqDto;
+import com.project.knit.dto.req.ThreadLikeReqDto;
 import com.project.knit.dto.req.ThreadUpdateReqDto;
 import com.project.knit.dto.res.*;
 import com.project.knit.service.S3Service;
@@ -38,7 +39,6 @@ public class ThreadController {
     public ResponseEntity<CommonResponse<ThreadShortListResDto>> getThreadInfoList() {
         return new ResponseEntity<>(threadService.getThreadInfoList(), HttpStatus.OK);
     }
-
 
     @GetMapping("/thread/{threadId}")
     public ResponseEntity<CommonResponse<ThreadResDto>> getThreadInfoById(@PathVariable Long threadId) {
@@ -79,4 +79,11 @@ public class ThreadController {
     public ResponseEntity<CommonResponse<List<CategoryResDto>>> getAllCategories() {
         return new ResponseEntity<>(threadService.getAllCategories(), HttpStatus.OK);
     }
+
+    @PostMapping("/v1/threads/like")
+    public ResponseEntity<CommonResponse> likeThread(@Valid @RequestBody ThreadLikeReqDto threadLikeReqDto) {
+        return new ResponseEntity<>(threadService.likeThread(threadLikeReqDto), HttpStatus.OK);
+    }
+
+    // todo cancel like
 }

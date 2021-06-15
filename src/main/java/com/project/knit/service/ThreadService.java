@@ -2,17 +2,11 @@ package com.project.knit.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.project.knit.domain.entity.Category;
-import com.project.knit.domain.entity.Content;
-import com.project.knit.domain.entity.Reference;
-import com.project.knit.domain.entity.Tag;
+import com.project.knit.domain.entity.*;
 import com.project.knit.domain.entity.Thread;
-import com.project.knit.domain.repository.CategoryRepository;
-import com.project.knit.domain.repository.ContentRepository;
-import com.project.knit.domain.repository.ReferenceRepository;
-import com.project.knit.domain.repository.TagRepository;
-import com.project.knit.domain.repository.ThreadRepository;
+import com.project.knit.domain.repository.*;
 import com.project.knit.dto.req.ThreadCreateReqDto;
+import com.project.knit.dto.req.ThreadLikeReqDto;
 import com.project.knit.dto.req.ThreadUpdateReqDto;
 import com.project.knit.dto.res.*;
 import com.project.knit.utils.enums.StatusCodeEnum;
@@ -36,6 +30,7 @@ public class ThreadService {
     private final TagRepository tagRepository;
     private final CategoryRepository categoryRepository;
     private final ReferenceRepository referenceRepository;
+    private final ThreadLikeRepository threadLikeRepository;
 
     public CommonResponse<ThreadShortListResDto> getThreadInfoList() {
         ThreadShortListResDto resDto = new ThreadShortListResDto();
@@ -125,6 +120,7 @@ public class ThreadService {
         resDto.setSubTitle(thread.getThreadSubTitle());
         resDto.setThumbnailUrl(thread.getThumbnailUrl());
 
+        thread.addViewCount();
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread Found.", resDto);
     }
 
@@ -165,8 +161,8 @@ public class ThreadService {
         // TODO TAG table에 THREAD 없애기, TAG는 그 자체로 관리. 이 경우 ADMIN ACCEPT할 때 TAG를 모를 수 있음.
         List<Tag> tags = new ArrayList<>();
         threadCreateReqDto.getTags().forEach(t -> {
-            Tag findTag = tagRepository.findByTagName(t.getValue());
-            if (findTag == null) {
+            List<Tag> findTags = tagRepository.findAllByTagName(t.getValue());
+            if (findTags == null || findTags.isEmpty()) {
                 Tag tag = Tag.builder()
                         .tagName(t.getValue())
                         .build();
@@ -175,7 +171,7 @@ public class ThreadService {
                 createdTag.addThread(createdThread);
                 tags.add(createdTag);
             } else {
-                tags.add(findTag);
+                tags.add(findTags.get(0));
             }
         });
 
@@ -379,5 +375,68 @@ public class ThreadService {
         });
 
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "All Tags Found.", resDtos);
+    }
+
+    public CommonResponse<ThreadMostViewedListResDto> getMostViewedList() {
+
+        List<Thread> mostViewedThreadList = threadRepository.findTop6ByStatusOrderByViewCountDesc(ThreadStatus.승인.name());
+
+        ThreadMostViewedListResDto resDto = new ThreadMostViewedListResDto();
+        List<ThreadMostViewedResDto> mostViewedResDtoList = new ArrayList<>();
+        mostViewedThreadList.forEach(t -> {
+            ThreadMostViewedResDto mostViewedResDto = new ThreadMostViewedResDto();
+            mostViewedResDto.setThreadId(t.getId());
+            mostViewedResDto.setContentSummary(t.getThreadSummary());
+            mostViewedResDto.setLikeCount(t.getLikeCount());
+            mostViewedResDto.setViewCount(t.getViewCount());
+        });
+        resDto.setCount(mostViewedThreadList.size()); // should be 6
+        resDto.setMostViewedThreads(mostViewedResDtoList);
+
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Most Viewed Threads Found.", resDto);
+    }
+
+    public CommonResponse<List<ThreadRecentChangedResDto>> getRecentChangedList() {
+        List<Thread> recentChangedList = threadRepository.findTop10ByStatusOrderByModifiedDateDesc(ThreadStatus.승인.name());
+        List<ThreadRecentChangedResDto> resDtos = new ArrayList<>();
+        recentChangedList.forEach(t -> {
+            ThreadRecentChangedResDto resDto = new ThreadRecentChangedResDto();
+            resDto.setThreadId(t.getId());
+            resDto.setTitle(t.getThreadTitle());
+            resDto.setModifiedDate(t.getModifiedDate());
+
+            resDtos.add(resDto);
+        });
+
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Recent Changed Threads Found.", resDtos);
+    }
+
+    public CommonResponse<ThreadFeaturedResDto> getFeaturedThread() {
+        Thread thread = threadRepository.findByStatusAndIsFeatured(ThreadStatus.승인.name(), "Y");
+        ThreadFeaturedResDto resDto = new ThreadFeaturedResDto();
+        resDto.setThreadId(thread.getId());
+        resDto.setTitle(thread.getThreadTitle());
+        resDto.setContent(thread.getContents().get(0).getValue());
+
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Featured Thread Found.", resDto);
+    }
+
+    public <T> CommonResponse<T> likeThread(ThreadLikeReqDto threadLikeReqDto) {
+        Thread findThread = threadRepository.findByIdAndStatus(threadLikeReqDto.getThreadId(), ThreadStatus.승인.name());
+        if (findThread == null) {
+            return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "Thread Not Found.");
+        }
+
+        // todo user validation null
+
+        ThreadLike threadLike = ThreadLike.builder()
+                .threadId(threadLikeReqDto.getThreadId())
+                .userId(threadLikeReqDto.getUserId())
+                .build();
+
+        threadLikeRepository.save(threadLike);
+        findThread.addLikeCount();
+
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread Liked.");
     }
 }

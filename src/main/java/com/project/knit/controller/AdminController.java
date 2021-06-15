@@ -59,4 +59,6 @@ public class AdminController {
     public ResponseEntity<CommonResponse<ThreadResDto>> getThreadInfoById(@PathVariable Long threadId) {
         return new ResponseEntity<>(adminService.getThreadInfoById(threadId), HttpStatus.OK);
     }
+
+    // todo feature 지정
 }
