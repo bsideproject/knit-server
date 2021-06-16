@@ -389,6 +389,8 @@ public class ThreadService {
             mostViewedResDto.setContentSummary(t.getThreadSummary());
             mostViewedResDto.setLikeCount(t.getLikeCount());
             mostViewedResDto.setViewCount(t.getViewCount());
+
+            mostViewedResDtoList.add(mostViewedResDto);
         });
         resDto.setCount(mostViewedThreadList.size()); // should be 6
         resDto.setMostViewedThreads(mostViewedResDtoList);
