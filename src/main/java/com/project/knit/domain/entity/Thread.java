@@ -37,6 +37,9 @@ public class Thread extends TimeEntity {
     @Column(name = "thread_summary")
     private String threadSummary;
 
+    @Column(name = "decline_reason")
+    private String declineReason;
+
     @JsonManagedReference
     @OneToMany(mappedBy = "thread")
     private List<Content> contents = new ArrayList<>();
@@ -112,6 +115,10 @@ public class Thread extends TimeEntity {
 
     public void feature() {
         this.isFeatured = "Y";
+    }
+
+    public void decline(String declineReason) {
+        this.declineReason = declineReason;
     }
 
     public void updateContents(List<Content> contents) {

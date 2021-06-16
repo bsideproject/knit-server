@@ -3,6 +3,7 @@ package com.project.knit.service;
 import com.project.knit.domain.entity.*;
 import com.project.knit.domain.entity.Thread;
 import com.project.knit.domain.repository.*;
+import com.project.knit.dto.req.ThreadDeclineReqDto;
 import com.project.knit.dto.res.*;
 import com.project.knit.utils.enums.StatusCodeEnum;
 import com.project.knit.utils.enums.ThreadStatus;
@@ -53,9 +54,10 @@ public class AdminService {
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "[ADMIN] Thread Successfully Created.");
     }
 
-    public <T> CommonResponse<T> declineThread(Long threadId) {
+    public <T> CommonResponse<T> declineThread(Long threadId, ThreadDeclineReqDto threadDeclineReqDto) {
         Thread thread = threadRepository.findById(threadId).orElseThrow(() -> new NullPointerException("Thread Info Not Found."));
         thread.changeStatus(ThreadStatus.반려.name());
+        thread.decline(threadDeclineReqDto.getDeclineReason());
 
         threadRepository.save(thread);
 
