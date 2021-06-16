@@ -119,6 +119,7 @@ public class ThreadService {
         resDto.setTitle(thread.getThreadTitle());
         resDto.setSubTitle(thread.getThreadSubTitle());
         resDto.setThumbnailUrl(thread.getThumbnailUrl());
+        resDto.setDate(thread.getCreatedDate());
 
         thread.addViewCount();
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread Found.", resDto);
@@ -340,6 +341,7 @@ public class ThreadService {
                 referenceList.add(referenceRes);
             });
             res.setReferences(referenceList);
+            res.setDate(t.getCreatedDate());
 
             resDtoList.add(res);
         }

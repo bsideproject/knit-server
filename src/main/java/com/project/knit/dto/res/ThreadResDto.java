@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Setter
@@ -18,4 +19,5 @@ public class ThreadResDto {
     private List<TagResDto> tags;
     private List<CategoryResDto> categories;
     private List<ReferenceResDto> references;
+    private LocalDateTime date;
 }

@@ -241,6 +241,7 @@ public class AdminService {
         resDto.setTitle(thread.getThreadTitle());
         resDto.setSubTitle(thread.getThreadSubTitle());
         resDto.setThumbnailUrl(thread.getThumbnailUrl());
+        resDto.setDate(thread.getCreatedDate());
 
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread Found.", resDto);
     }
