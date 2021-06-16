@@ -20,4 +20,5 @@ public class ThreadResDto {
     private List<CategoryResDto> categories;
     private List<ReferenceResDto> references;
     private LocalDateTime date;
+    private String isFeatured;
 }
