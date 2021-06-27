@@ -1,7 +1,10 @@
 package com.project.knit.domain.repository;
 
+import com.project.knit.domain.entity.Content;
 import com.project.knit.domain.entity.Tag;
 import com.project.knit.domain.entity.Thread;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -18,4 +21,12 @@ public interface ThreadRepository extends JpaRepository<Thread, Long> {
     List<Thread> findTop10ByStatusOrderByModifiedDateDesc(String status);
 
     Thread findByStatusAndIsFeatured(String status, String isFeatured);
+
+    List<Thread> findAllByThreadTitleOrContentsInOrderByModifiedDateDesc(Pageable pageable, String keyword, List<Content> contentList);
+
+    Integer countAllByStatus(String status);
+
+    Integer countAllByTagsInAndStatus(List<Tag> tagList, String status);
+
+    List<Thread> findAllByTagsIn(Pageable pageable, List<Tag> tagList);
 }

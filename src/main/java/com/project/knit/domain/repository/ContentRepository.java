@@ -9,4 +9,6 @@ public interface ContentRepository extends JpaRepository<Content, Long> {
     List<Content> findAllByThreadIdOrderBySequence(Long threadId);
 
     void deleteAllByThreadId(Long threadId);
+
+    List<Content> findAllByValueContainingOrderBySequence(String keyword);
 }

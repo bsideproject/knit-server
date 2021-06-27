@@ -11,14 +11,18 @@ import com.project.knit.dto.req.ThreadUpdateReqDto;
 import com.project.knit.dto.res.*;
 import com.project.knit.utils.enums.StatusCodeEnum;
 import com.project.knit.utils.enums.ThreadStatus;
-import com.project.knit.utils.enums.ThreadType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.awt.print.Pageable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -285,6 +289,8 @@ public class ThreadService {
             findThread.updateReferences(references);
         }
 
+        findThread.changeStatus(ThreadStatus.대기.name());
+
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread(Update) on the waiting list.");
     }
 
@@ -444,5 +450,145 @@ public class ThreadService {
         findThread.addLikeCount();
 
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread Liked.");
+    }
+
+    public CommonResponse<ThreadPagingResDto> getKeywordSearchList(String keyword, Integer page) {
+        if (keyword.isBlank()) {
+            return CommonResponse.response(StatusCodeEnum.OK.getStatus(), keyword + "에 대한 검색 결과를 찾지 못했어요.");
+        }
+
+        if (page == null) {
+            page = 0;
+        }
+
+        List<Content> contentList = contentRepository.findAllByValueContainingOrderBySequence(keyword);
+        List<Thread> threadList = threadRepository.findAllByThreadTitleOrContentsInOrderByModifiedDateDesc(PageRequest.of(page-1, 10), keyword, contentList);
+
+        ThreadPagingResDto resDto = new ThreadPagingResDto();
+        resDto.setCount(threadRepository.countAllByStatus(ThreadStatus.승인.name()));
+        List<ThreadResDto> threadResList = new ArrayList<>();
+        for (Thread t : threadList) {
+            ThreadResDto res = new ThreadResDto();
+            res.setId(t.getId());
+            res.setTitle(t.getThreadTitle());
+            res.setSubTitle(t.getThreadSubTitle());
+            res.setThumbnailUrl(t.getThumbnailUrl());
+            List<ContentResDto> contentResList = new ArrayList<>();
+            List<Content> contents = contentRepository.findAllByThreadIdOrderBySequence(t.getId());
+            contents.forEach(c -> {
+                ContentResDto contentRes = new ContentResDto();
+                contentRes.setContentId(c.getId());
+                contentRes.setType(c.getContentType());
+                contentRes.setValue(c.getValue());
+                contentRes.setSummary(c.getSummary());
+
+                contentResList.add(contentRes);
+            });
+            res.setContents(contentResList);
+            List<CategoryResDto> categoryList = new ArrayList<>();
+            t.getCategories().forEach(c -> {
+                CategoryResDto categoryRes = new CategoryResDto();
+                categoryRes.setCategoryId(c.getId());
+                categoryRes.setValue(c.getCategory());
+
+                categoryList.add(categoryRes);
+            });
+            res.setCategories(categoryList);
+            List<TagResDto> tagResList = new ArrayList<>();
+            t.getTags().forEach(tr -> {
+                TagResDto tagRes = new TagResDto();
+                tagRes.setTagId(tr.getId());
+                tagRes.setValue(tr.getTagName());
+
+                tagResList.add(tagRes);
+            });
+            res.setTags(tagResList);
+            List<ReferenceResDto> referenceList = new ArrayList<>();
+            t.getReferences().forEach(r -> {
+                ReferenceResDto referenceRes = new ReferenceResDto();
+                referenceRes.setReferenceId(r.getId());
+                referenceRes.setReferenceLink(r.getReferenceLink());
+                referenceRes.setReferenceDescription(r.getReferenceDescription());
+
+                referenceList.add(referenceRes);
+            });
+            res.setReferences(referenceList);
+            res.setDate(t.getCreatedDate());
+            res.setIsFeatured(t.getIsFeatured());
+
+            threadResList.add(res);
+        }
+        resDto.setThreads(threadResList);
+
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Keyword Search List.", resDto);
+    }
+
+    public CommonResponse<ThreadPagingResDto> getTagSearchList(String tag, Integer page) {
+
+        List<Tag> tags = tagRepository.findAllByTagName(tag);
+        List<Tag> distinctTags = tags.stream().distinct().collect(Collectors.toList());
+
+        if (page == null) {
+            page = 0;
+        }
+        List<Thread> threadList = threadRepository.findAllByTagsIn(PageRequest.of(page-1, 10, Sort.by("modifiedDate").descending()), distinctTags);
+
+        ThreadPagingResDto resDto = new ThreadPagingResDto();
+        resDto.setCount(threadRepository.countAllByTagsInAndStatus(distinctTags, ThreadStatus.승인.name()));
+        List<ThreadResDto> threadResList = new ArrayList<>();
+        for (Thread t : threadList) {
+            ThreadResDto res = new ThreadResDto();
+            res.setId(t.getId());
+            res.setTitle(t.getThreadTitle());
+            res.setSubTitle(t.getThreadSubTitle());
+            res.setThumbnailUrl(t.getThumbnailUrl());
+            List<ContentResDto> contentList = new ArrayList<>();
+            List<Content> contents = contentRepository.findAllByThreadIdOrderBySequence(t.getId());
+            contents.forEach(c -> {
+                ContentResDto contentRes = new ContentResDto();
+                contentRes.setContentId(c.getId());
+                contentRes.setType(c.getContentType());
+                contentRes.setValue(c.getValue());
+                contentRes.setSummary(c.getSummary());
+
+                contentList.add(contentRes);
+            });
+            res.setContents(contentList);
+            List<CategoryResDto> categoryList = new ArrayList<>();
+            t.getCategories().forEach(c -> {
+                CategoryResDto categoryRes = new CategoryResDto();
+                categoryRes.setCategoryId(c.getId());
+                categoryRes.setValue(c.getCategory());
+
+                categoryList.add(categoryRes);
+            });
+            res.setCategories(categoryList);
+            List<TagResDto> tagResList = new ArrayList<>();
+            t.getTags().forEach(tr -> {
+                TagResDto tagRes = new TagResDto();
+                tagRes.setTagId(tr.getId());
+                tagRes.setValue(tr.getTagName());
+
+                tagResList.add(tagRes);
+            });
+            res.setTags(tagResList);
+            List<ReferenceResDto> referenceList = new ArrayList<>();
+            t.getReferences().forEach(r -> {
+                ReferenceResDto referenceRes = new ReferenceResDto();
+                referenceRes.setReferenceId(r.getId());
+                referenceRes.setReferenceLink(r.getReferenceLink());
+                referenceRes.setReferenceDescription(r.getReferenceDescription());
+
+                referenceList.add(referenceRes);
+            });
+            res.setReferences(referenceList);
+            res.setDate(t.getCreatedDate());
+            res.setIsFeatured(t.getIsFeatured());
+
+            threadResList.add(res);
+        }
+        resDto.setThreads(threadResList);
+
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Tag Search List.", resDto);
     }
 }
