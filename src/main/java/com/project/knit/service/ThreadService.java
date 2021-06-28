@@ -462,12 +462,16 @@ public class ThreadService {
         }
 
         List<Content> contentList = contentRepository.findAllByValueContainingOrderBySequence(keyword);
-        List<Thread> threadList = threadRepository.findAllByThreadTitleOrContentsInOrderByModifiedDateDesc(PageRequest.of(page-1, 10), keyword, contentList);
+        Page<Thread> threadList = threadRepository.findAllByThreadTitleOrContentsInAndStatusOrderByModifiedDateDesc(PageRequest.of(page - 1, 10), keyword, contentList, ThreadStatus.승인.name());
+
+        if (threadList == null || threadList.getContent().isEmpty()) {
+            return CommonResponse.response(StatusCodeEnum.OK.getStatus(), keyword + "에 대한 검색 결과를 찾지 못했어요.");
+        }
 
         ThreadPagingResDto resDto = new ThreadPagingResDto();
-        resDto.setCount(threadRepository.countAllByStatus(ThreadStatus.승인.name()));
+        resDto.setCount(threadRepository.countAllByThreadTitleOrContentsInAndStatus(keyword, contentList, ThreadStatus.승인.name()));
         List<ThreadResDto> threadResList = new ArrayList<>();
-        for (Thread t : threadList) {
+        for (Thread t : threadList.getContent()) {
             ThreadResDto res = new ThreadResDto();
             res.setId(t.getId());
             res.setTitle(t.getThreadTitle());
@@ -519,6 +523,13 @@ public class ThreadService {
             threadResList.add(res);
         }
         resDto.setThreads(threadResList);
+        if (page > threadList.getTotalPages()) {
+            resDto.setNextPage(null);
+        } else if (threadList.getTotalPages() == page) {
+            resDto.setNextPage(page);
+        } else {
+            resDto.setNextPage(page + 1);
+        }
 
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Keyword Search List.", resDto);
     }
@@ -531,12 +542,15 @@ public class ThreadService {
         if (page == null) {
             page = 0;
         }
-        List<Thread> threadList = threadRepository.findAllByTagsIn(PageRequest.of(page-1, 10, Sort.by("modifiedDate").descending()), distinctTags);
+        Page<Thread> threadList = threadRepository.findAllByTagsInAndStatus(PageRequest.of(page - 1, 10, Sort.by("modifiedDate").descending()), distinctTags, ThreadStatus.승인.name());
+        if (threadList == null || threadList.isEmpty()) {
+            return CommonResponse.response(StatusCodeEnum.OK.getStatus(), tag + "에 대한 검색 결과를 찾지 못했어요.");
+        }
 
         ThreadPagingResDto resDto = new ThreadPagingResDto();
         resDto.setCount(threadRepository.countAllByTagsInAndStatus(distinctTags, ThreadStatus.승인.name()));
         List<ThreadResDto> threadResList = new ArrayList<>();
-        for (Thread t : threadList) {
+        for (Thread t : threadList.getContent()) {
             ThreadResDto res = new ThreadResDto();
             res.setId(t.getId());
             res.setTitle(t.getThreadTitle());
@@ -588,6 +602,13 @@ public class ThreadService {
             threadResList.add(res);
         }
         resDto.setThreads(threadResList);
+        if (page > threadList.getTotalPages()) {
+            resDto.setNextPage(null);
+        } else if (threadList.getTotalPages() == page) {
+            resDto.setNextPage(page);
+        } else {
+            resDto.setNextPage(page + 1);
+        }
 
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Tag Search List.", resDto);
     }

@@ -22,11 +22,11 @@ public interface ThreadRepository extends JpaRepository<Thread, Long> {
 
     Thread findByStatusAndIsFeatured(String status, String isFeatured);
 
-    List<Thread> findAllByThreadTitleOrContentsInOrderByModifiedDateDesc(Pageable pageable, String keyword, List<Content> contentList);
+    Page<Thread> findAllByThreadTitleOrContentsInAndStatusOrderByModifiedDateDesc(Pageable pageable, String keyword, List<Content> contentList, String status);
 
-    Integer countAllByStatus(String status);
+    Integer countAllByThreadTitleOrContentsInAndStatus(String keyword, List<Content> contentList, String status);
 
     Integer countAllByTagsInAndStatus(List<Tag> tagList, String status);
 
-    List<Thread> findAllByTagsIn(Pageable pageable, List<Tag> tagList);
+    Page<Thread> findAllByTagsInAndStatus(Pageable pageable, List<Tag> tagList, String status);
 }
