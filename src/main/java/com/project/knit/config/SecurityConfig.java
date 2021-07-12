@@ -2,11 +2,14 @@ package com.project.knit.config;
 
 import com.project.knit.jwt.JwtAuthenticationFilter;
 import com.project.knit.jwt.JwtTokenProvider;
+import com.project.knit.service.CustomUserDetailService;
 import com.project.knit.utils.enums.Role;
 import lombok.AllArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -22,6 +25,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final JwtTokenProvider jwtTokenProvider;
+
+    private final CustomUserDetailService userDetailsService;
+    @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
+    }
 
     @Override
     public void configure(WebSecurity webSecurity) throws Exception {
@@ -68,14 +77,14 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                 // 토큰 기반 인증이므로 세션도 사용 X
                 .and()
                 .authorizeRequests() // 요청에 대한 사용권한 체크
-//                .antMatchers("/admin/**").hasRole("ADMIN")
-//                .antMatchers("/user/**", "/thread/**").hasRole("USER")
-                .antMatchers("/**").hasRole("USER")
-                .anyRequest().permitAll() // 나머지 요청은 누구나 접근 가능
+                .antMatchers("/admin/**").hasRole("ADMIN")
+                .antMatchers("/v1/user/**", "/thread/**", "/v1/threads/**").permitAll().anyRequest().hasRole("USER")
+//                .antMatchers("/**").permitAll().anyRequest().hasRole("USER")
+//                .anyRequest().permitAll() // 나머지 요청은 누구나 접근 가능
                 .and()
-                .formLogin().disable()
-                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
-                        UsernamePasswordAuthenticationFilter.class);
+                .formLogin().disable();
+//                .addFilterBefore(new JwtAuthenticationFilter(jwtTokenProvider),
+//                        UsernamePasswordAuthenticationFilter.class);
         // JwtAuthenticationFilter는
         // UsernamePasswordAuthenticationFilter 전에 넣음
     }

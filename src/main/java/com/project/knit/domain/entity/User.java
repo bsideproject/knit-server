@@ -1,6 +1,5 @@
 package com.project.knit.domain.entity;
 
-import com.project.knit.utils.enums.Role;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
@@ -10,8 +9,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.EnumType;
-import javax.persistence.Enumerated;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -54,15 +51,18 @@ public class User extends TimeEntity implements UserDetails {
     private String type;
 
     private String token;
+    private String accessToken;
 
-    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role;
+    private String role;
 
     @Builder
-    public User(String email, Role role) {
+    public User(String email, String role, String password, String type, String token) {
         this.email = email;
         this.role = role;
+        this.password = password;
+        this.type = type;
+        this.token = token;
     }
 
     @Override
@@ -93,5 +93,9 @@ public class User extends TimeEntity implements UserDetails {
     @Override
     public boolean isEnabled() {
         return false;
+    }
+
+    public void addAccessToken(String accessToken) {
+        this.accessToken = accessToken;
     }
 }
