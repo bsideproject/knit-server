@@ -8,10 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -43,15 +40,15 @@ public class HomeController {
         return new ResponseEntity<>(threadService.getFeaturedThread(), HttpStatus.OK);
     }
 
-    // search by keyword
-    @GetMapping("/search/keyword/{keyword}/{page}")
-    public ResponseEntity<CommonResponse<ThreadPagingResDto>> getKeywordSearchList(@PathVariable String keyword, @PathVariable Integer page) {
-        return new ResponseEntity<>(threadService.getKeywordSearchList(keyword, page), HttpStatus.OK);
+    // search
+    @GetMapping("/search")
+    public ResponseEntity<CommonResponse<ThreadPagingResDto>> getKeywordSearchList(@RequestParam String search, @RequestParam Integer page) {
+        return new ResponseEntity<>(threadService.getSearchList(search, page), HttpStatus.OK);
     }
 
-    // search by tag
-    @GetMapping("/search/tag/{tag}/{page}")
-    public ResponseEntity<CommonResponse<ThreadPagingResDto>> getTagSearchList(@PathVariable String tag, @PathVariable Integer page) {
-        return new ResponseEntity<>(threadService.getTagSearchList(tag, page), HttpStatus.OK);
-    }
+//    // search by tag
+//    @GetMapping("/search/tag/{tag}/{page}")
+//    public ResponseEntity<CommonResponse<ThreadPagingResDto>> getTagSearchList(@PathVariable String tag, @PathVariable Integer page) {
+//        return new ResponseEntity<>(threadService.getTagSearchList(tag, page), HttpStatus.OK);
+//    }
 }

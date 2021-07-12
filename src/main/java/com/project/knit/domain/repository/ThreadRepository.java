@@ -29,4 +29,6 @@ public interface ThreadRepository extends JpaRepository<Thread, Long> {
     Integer countAllByTagsInAndStatus(List<Tag> tagList, String status);
 
     List<Thread> findAllByTagsIn(Pageable pageable, List<Tag> tagList);
+
+    Thread findByIsFeatured(String isFeatured);
 }

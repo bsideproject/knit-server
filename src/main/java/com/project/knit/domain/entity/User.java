@@ -5,6 +5,8 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -15,12 +17,13 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.validation.constraints.Email;
+import java.util.Collection;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "user")
 @Getter
 @Entity
-public class User extends TimeEntity {
+public class User extends TimeEntity implements UserDetails {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,16 +39,21 @@ public class User extends TimeEntity {
     @Column(length = 75)
     private String password;
 
-    @Column(columnDefinition = "VARCHAR(100) DEFAULT 'Github 주소 입력'")
+    @Column(columnDefinition = "VARCHAR(100) COMMENT 'Github 주소 입력'")
     private String github;
 
-    @Column(columnDefinition = "VARCHAR(100) DEFAULT '링크드인 주소 입력'")
+    @Column(columnDefinition = "VARCHAR(100) COMMENT '링크드인 주소 입력'")
     private String linkedin;
 
-    private String image;
+    @Column(name = "profile_image")
+    private String profileImage;
 
-    // default 255
     private String introduction;
+
+    @Column(columnDefinition = "VARCHAR(10) COMMENT 'GOOGLE || NAVER' ")
+    private String type;
+
+    private String token;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -55,5 +63,35 @@ public class User extends TimeEntity {
     public User(String email, Role role) {
         this.email = email;
         this.role = role;
+    }
+
+    @Override
+    public Collection<? extends GrantedAuthority> getAuthorities() {
+        return null;
+    }
+
+    @Override
+    public String getUsername() {
+        return null;
+    }
+
+    @Override
+    public boolean isAccountNonExpired() {
+        return false;
+    }
+
+    @Override
+    public boolean isAccountNonLocked() {
+        return false;
+    }
+
+    @Override
+    public boolean isCredentialsNonExpired() {
+        return false;
+    }
+
+    @Override
+    public boolean isEnabled() {
+        return false;
     }
 }

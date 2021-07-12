@@ -40,6 +40,9 @@ public class Thread extends TimeEntity {
     @Column(name = "decline_reason")
     private String declineReason;
 
+    @Column(name = "cover_image")
+    private String coverImage;
+
     @JsonManagedReference
     @OneToMany(mappedBy = "thread")
     private List<Content> contents = new ArrayList<>();
@@ -66,7 +69,8 @@ public class Thread extends TimeEntity {
     private String isFeatured;
 
     @Builder
-    public Thread(String threadTitle, String threadSubTitle, String thumbnailUrl, String threadSummary, String status) {
+    public Thread(String coverImage, String threadTitle, String threadSubTitle, String thumbnailUrl, String threadSummary, String status) {
+        this.coverImage = coverImage;
         this.threadTitle = threadTitle;
         this.threadSubTitle = threadSubTitle;
         this.thumbnailUrl = thumbnailUrl;
@@ -113,8 +117,12 @@ public class Thread extends TimeEntity {
         this.likeCount -= 1;
     }
 
-    public void feature() {
+    public void featureOn() {
         this.isFeatured = "Y";
+    }
+
+    public void featureOff() {
+        this.isFeatured = "N";
     }
 
     public void decline(String declineReason) {

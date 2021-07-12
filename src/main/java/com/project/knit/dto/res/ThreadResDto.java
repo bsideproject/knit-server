@@ -15,6 +15,7 @@ public class ThreadResDto {
     private String title;
     private String subTitle;
     private String thumbnailUrl;
+    private String coverImage;
     private List<ContentResDto> contents;
     private List<TagResDto> tags;
     private List<CategoryResDto> categories;

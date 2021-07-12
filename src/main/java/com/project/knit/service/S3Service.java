@@ -4,6 +4,8 @@ import com.amazonaws.auth.AWSCredentials;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.regions.Regions;
+import com.amazonaws.services.cloudfront.CloudFrontUrlSigner;
+import com.amazonaws.services.cloudfront.util.SignerUtils;
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 import com.amazonaws.services.s3.model.CannedAccessControlList;
@@ -18,7 +20,9 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.security.spec.InvalidKeySpecException;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 
 import static java.util.Arrays.asList;
@@ -34,6 +38,31 @@ public class S3Service {
     private final String bucketName = "knit-document";
 
     private final List<String> extensionList = asList("jpg", "jpeg", "png", "gif");
+//
+//    @Value("${cloudfront.domain}")
+//    private String cloudfrontDomain;
+//
+//    @Value("${private.key.file}")
+//    private String privateKey;
+//
+//    @Value("${private.key.id}")
+//    private String privateKeyPairId;
+//
+//    private static final SignerUtils.Protocol protocol = SignerUtils.Protocol.https;
+//    private static final Date dateLessThan = new Date(System.currentTimeMillis() + 60 * 1000);
+//
+//    public String getCloudFrontSignedUrl(String directory, String fileName) {
+//        String distributionDomain = cloudfrontDomain;
+//        String s3ObjectKey = directory + fileName;
+//        String signedUrl = null;
+//        try {
+//            signedUrl = CloudFrontUrlSigner.getSignedURLWithCannedPolicy(protocol, distributionDomain, new File(privateKey), s3ObjectKey, privateKeyPairId, dateLessThan);
+//        } catch (InvalidKeySpecException | IOException e) {
+//            e.printStackTrace();
+//        }
+//
+//        return signedUrl;
+//    }
 
     private S3Service(@Value("${aws.access-key}") final String accessKey, @Value("${aws.secret-key}") final String secretKey) {
         createS3Client(accessKey, secretKey);
@@ -60,6 +89,8 @@ public class S3Service {
             return uploadThumbnail(new PutObjectRequest(bucketName, "thumbnail/" + generateFileName(type, fileExtension), convertMultiPartToFile(multipartFile)));
         } else if (type.equals("thread")) {
             return uploadThreadFile(new PutObjectRequest(bucketName, "thread/" + generateFileName(type, fileExtension), convertMultiPartToFile(multipartFile)));
+        } else if (type.equals("cover")) {
+            return uploadThreadFile(new PutObjectRequest(bucketName, "thread/cover/" + generateFileName(type, fileExtension), convertMultiPartToFile(multipartFile)));
         } else {
             return new S3ImageResDto();
         }

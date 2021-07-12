@@ -58,5 +58,8 @@ public class AdminController {
         return new ResponseEntity<>(adminService.getThreadInfoById(threadId), HttpStatus.OK);
     }
 
-    // todo feature 지정
+    @PostMapping("/feature/{threadId}")
+    public ResponseEntity<CommonResponse> registerToFeature(@PathVariable Long threadId) {
+        return new ResponseEntity<>(adminService.registerToFeature(threadId), HttpStatus.OK);
+    }
 }

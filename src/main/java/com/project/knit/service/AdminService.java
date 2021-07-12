@@ -27,6 +27,20 @@ public class AdminService {
     private final CategoryRepository categoryRepository;
     private final ReferenceRepository referenceRepository;
 
+
+    public <T> CommonResponse<T> registerToFeature(Long threadId) {
+        Thread thread = threadRepository.findById(threadId).orElseThrow(() -> new NullPointerException("Thread Info Not Found."));
+
+        Thread featured = threadRepository.findByIsFeatured("Y");
+        if (featured != null) {
+            featured.featureOff();
+        }
+
+        thread.featureOn();
+
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "[ADMIN] Thread Successfully Featured.");
+    }
+
     public <T> CommonResponse<T> acceptThread(Long threadId) {
         Thread thread = threadRepository.findById(threadId).orElseThrow(() -> new NullPointerException("Thread Info Not Found."));
         thread.changeStatus(ThreadStatus.승인.name());

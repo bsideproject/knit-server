@@ -9,17 +9,17 @@ import com.project.knit.dto.req.ThreadCreateReqDto;
 import com.project.knit.dto.req.ThreadLikeReqDto;
 import com.project.knit.dto.req.ThreadUpdateReqDto;
 import com.project.knit.dto.res.*;
+import com.project.knit.utils.StringUtils;
 import com.project.knit.utils.enums.StatusCodeEnum;
 import com.project.knit.utils.enums.ThreadStatus;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.domain.Page;
+import org.apache.commons.lang3.StringEscapeUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.awt.print.Pageable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -125,6 +125,7 @@ public class ThreadService {
         resDto.setThumbnailUrl(thread.getThumbnailUrl());
         resDto.setDate(thread.getCreatedDate());
         resDto.setIsFeatured(thread.getIsFeatured());
+        resDto.setCoverImage("https://knit-document.s3.ap-northeast-2.amazonaws.com/thread/cover/cover1.png");
 
         thread.addViewCount();
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread Found.", resDto);
@@ -143,6 +144,7 @@ public class ThreadService {
         Thread thread = Thread.builder()
                 .threadTitle(threadCreateReqDto.getTitle())
                 .threadSubTitle(threadCreateReqDto.getSubTitle())
+                .coverImage(threadCreateReqDto.getCoverImage() == null ? "https://knit-document.s3.ap-northeast-2.amazonaws.com/thread/cover/knitwki_cover_default.png" : threadCreateReqDto.getCoverImage())
                 .thumbnailUrl(threadCreateReqDto.getThumbnailUrl())
                 .threadSummary(threadCreateReqDto.getSummary())
                 .status(ThreadStatus.대기.name())
@@ -308,6 +310,7 @@ public class ThreadService {
             res.setTitle(t.getThreadTitle());
             res.setSubTitle(t.getThreadSubTitle());
             res.setThumbnailUrl(t.getThumbnailUrl());
+            res.setCoverImage("https://knit-document.s3.ap-northeast-2.amazonaws.com/thread/cover/cover1.png");
             List<ContentResDto> contentList = new ArrayList<>();
             List<Content> contents = contentRepository.findAllByThreadIdOrderBySequence(t.getId());
             contents.forEach(c -> {
@@ -452,7 +455,7 @@ public class ThreadService {
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread Liked.");
     }
 
-    public CommonResponse<ThreadPagingResDto> getKeywordSearchList(String keyword, Integer page) {
+    public CommonResponse<ThreadPagingResDto> getSearchList(String keyword, Integer page) {
         if (keyword.isBlank()) {
             return CommonResponse.response(StatusCodeEnum.OK.getStatus(), keyword + "에 대한 검색 결과를 찾지 못했어요.");
         }
@@ -461,8 +464,20 @@ public class ThreadService {
             page = 0;
         }
 
-        List<Content> contentList = contentRepository.findAllByValueContainingOrderBySequence(keyword);
-        List<Thread> threadList = threadRepository.findAllByThreadTitleOrContentsInOrderByModifiedDateDesc(PageRequest.of(page-1, 10), keyword, contentList);
+        if (keyword.contains("#")) {
+            return getTagSearchList(keyword.replace("#", ""), page);
+        } else {
+            return getKeywordSearchList(keyword, page);
+        }
+    }
+
+    public CommonResponse<ThreadPagingResDto> getKeywordSearchList(String search, Integer page) {
+
+        search = StringEscapeUtils.unescapeJava(search);
+        log.info("[TEMP] keyword : {}", search);
+
+        List<Content> contentList = contentRepository.findAllByValueContainingOrderBySequence(search);
+        List<Thread> threadList = threadRepository.findAllByThreadTitleOrContentsInOrderByModifiedDateDesc(PageRequest.of(page - 1, 10), search, contentList);
 
         ThreadPagingResDto resDto = new ThreadPagingResDto();
         resDto.setCount(threadRepository.countAllByStatus(ThreadStatus.승인.name()));
@@ -473,6 +488,7 @@ public class ThreadService {
             res.setTitle(t.getThreadTitle());
             res.setSubTitle(t.getThreadSubTitle());
             res.setThumbnailUrl(t.getThumbnailUrl());
+            res.setCoverImage("https://knit-document.s3.ap-northeast-2.amazonaws.com/thread/cover/cover1.png");
             List<ContentResDto> contentResList = new ArrayList<>();
             List<Content> contents = contentRepository.findAllByThreadIdOrderBySequence(t.getId());
             contents.forEach(c -> {
@@ -525,13 +541,17 @@ public class ThreadService {
 
     public CommonResponse<ThreadPagingResDto> getTagSearchList(String tag, Integer page) {
 
+        // todo 직군 태그 (category)
+        log.info("[TEMP] keyword-tag : {}", tag);
         List<Tag> tags = tagRepository.findAllByTagName(tag);
         List<Tag> distinctTags = tags.stream().distinct().collect(Collectors.toList());
 
         if (page == null) {
             page = 0;
         }
-        List<Thread> threadList = threadRepository.findAllByTagsIn(PageRequest.of(page-1, 10, Sort.by("modifiedDate").descending()), distinctTags);
+
+        // 최근 편집 순서
+        List<Thread> threadList = threadRepository.findAllByTagsIn(PageRequest.of(page - 1, 10, Sort.by("modifiedDate").descending()), distinctTags);
 
         ThreadPagingResDto resDto = new ThreadPagingResDto();
         resDto.setCount(threadRepository.countAllByTagsInAndStatus(distinctTags, ThreadStatus.승인.name()));
@@ -542,6 +562,7 @@ public class ThreadService {
             res.setTitle(t.getThreadTitle());
             res.setSubTitle(t.getThreadSubTitle());
             res.setThumbnailUrl(t.getThumbnailUrl());
+            res.setCoverImage("https://knit-document.s3.ap-northeast-2.amazonaws.com/thread/cover/cover1.png");
             List<ContentResDto> contentList = new ArrayList<>();
             List<Content> contents = contentRepository.findAllByThreadIdOrderBySequence(t.getId());
             contents.forEach(c -> {

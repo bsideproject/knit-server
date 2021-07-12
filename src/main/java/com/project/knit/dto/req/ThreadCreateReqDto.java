@@ -18,6 +18,7 @@ public class ThreadCreateReqDto {
     private String subTitle;
     private String thumbnailUrl;
     private String summary;
+    private String coverImage;
     @NotNull(message = "At least one content is required.")
     private List<ContentReqDto> contents;
     @NotNull(message = "At least one tag is required.")
