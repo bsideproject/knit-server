@@ -11,5 +11,6 @@ import java.util.List;
 @NoArgsConstructor
 public class ThreadPagingResDto {
     private Integer count;
+    private Integer nextPage;
     private List<ThreadResDto> threads;
 }
