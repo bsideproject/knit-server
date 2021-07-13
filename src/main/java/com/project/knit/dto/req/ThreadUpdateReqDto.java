@@ -1,9 +1,5 @@
 package com.project.knit.dto.req;
 
-import com.project.knit.domain.entity.Category;
-import com.project.knit.domain.entity.Content;
-import com.project.knit.domain.entity.Reference;
-import com.project.knit.domain.entity.Tag;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;

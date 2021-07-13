@@ -3,7 +3,6 @@ package com.project.knit.domain.repository;
 import com.project.knit.domain.entity.Content;
 import com.project.knit.domain.entity.Tag;
 import com.project.knit.domain.entity.Thread;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 

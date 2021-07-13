@@ -1,11 +1,8 @@
 package com.project.knit.config;
 
-import com.project.knit.jwt.JwtAuthenticationFilter;
-import com.project.knit.jwt.JwtTokenProvider;
+import com.project.knit.config.jwt.JwtTokenProvider;
 import com.project.knit.service.CustomUserDetailService;
-import com.project.knit.utils.enums.Role;
 import lombok.AllArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,7 +14,6 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @AllArgsConstructor
@@ -27,19 +23,16 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     private final JwtTokenProvider jwtTokenProvider;
 
     private final CustomUserDetailService userDetailsService;
+
     @Override
     protected void configure(AuthenticationManagerBuilder auth) throws Exception {
         auth.userDetailsService(userDetailsService).passwordEncoder(passwordEncoder());
     }
 
     @Override
-    public void configure(WebSecurity webSecurity) throws Exception {
-//        webSecurity.ignoring()
-//                .antMatchers("/**")
-//                .anyRequest();
-
+    public void configure(WebSecurity webSecurity) {
         webSecurity.ignoring()
-                .antMatchers("/v1/home/**", "/v1/user/login");
+                .antMatchers("/v1/home/**", "/v1/user/login", "/v1/auth/**", "/actuator/health");
     }
 
 //    @Override

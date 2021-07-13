@@ -1,23 +1,29 @@
 package com.project.knit.service;
 
+import com.project.knit.config.jwt.JwtTokenProvider;
 import com.project.knit.domain.entity.User;
 import com.project.knit.domain.repository.UserRepository;
 import com.project.knit.dto.req.LoginReqDto;
 import com.project.knit.dto.res.CommonResponse;
-import com.project.knit.jwt.JwtTokenProvider;
+import com.project.knit.dto.res.LoginResDto;
 import com.project.knit.service.social.SocialOauth;
 import com.project.knit.utils.enums.Role;
 import com.project.knit.utils.enums.SocialLoginType;
 import com.project.knit.utils.enums.StatusCodeEnum;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import javax.crypto.SecretKeyFactory;
+import javax.crypto.spec.PBEKeySpec;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 import java.io.IOException;
-import java.security.PrivateKey;
+import java.nio.charset.StandardCharsets;
+import java.security.NoSuchAlgorithmException;
+import java.security.spec.InvalidKeySpecException;
 import java.util.Collections;
 import java.util.List;
 
@@ -53,33 +59,86 @@ public class UserService {
     }
 
     @Transactional
-    public CommonResponse<String> login(LoginReqDto loginReqDto) {
-        String snsToken = requestAccessToken(SocialLoginType.valueOf(loginReqDto.getType()), loginReqDto.getToken());
-        log.info("{} sns token : {}", loginReqDto.getToken(), snsToken);
+    public CommonResponse<LoginResDto> login(LoginReqDto loginReqDto) {
+        log.info("loginReqDto.getToken() : {}", loginReqDto.getToken());
+        String snsToken = requestAccessToken(SocialLoginType.valueOf(loginReqDto.getType().toUpperCase()), loginReqDto.getToken());
+        log.info("requested sns access token result : {}", snsToken);
 
-        String token = null;
+        String accessToken = null;
+        String refreshToken = null;
         User findUser = userRepository.findByEmail(loginReqDto.getEmail());
+        String encodedPassword = createEncodedPassword(loginReqDto.getEmail(), loginReqDto.getPassword());
+        LoginResDto resDto = new LoginResDto();
         if (findUser == null) {
             User user = User.builder()
                     .email(loginReqDto.getEmail())
-                    .password(loginReqDto.getPassword())
+                    .password(encodedPassword)
                     .type(loginReqDto.getType())
                     .token(loginReqDto.getToken())
                     .role(Role.USER.getKey())
                     .build();
 
             User createdUser = userRepository.save(user);
-
-            token = jwtTokenProvider.createToken(createdUser.getEmail(), Collections.singletonList(createdUser.getRole()));
-
-            createdUser.addAccessToken(token);
+            // todo create profile
+            accessToken = jwtTokenProvider.createAccessToken(createdUser.getEmail(), Collections.singletonList(createdUser.getRole()));
+            refreshToken = jwtTokenProvider.createRefreshToken(RandomStringUtils.randomAlphanumeric(7));
+            createdUser.addRefreshToken(refreshToken);
+            resDto.setAccessToken(accessToken);
+            resDto.setRefreshToken(refreshToken);
         } else {
             if (loginReqDto.getEmail().equals(findUser.getEmail()) && loginReqDto.getPassword().equals(findUser.getPassword())) {
-                token = jwtTokenProvider.createToken(findUser.getEmail(), Collections.singletonList(findUser.getRole()));
-                findUser.addAccessToken(token);
+                accessToken = jwtTokenProvider.createAccessToken(findUser.getEmail(), Collections.singletonList(findUser.getRole()));
+                refreshToken = jwtTokenProvider.createRefreshToken(RandomStringUtils.randomAlphanumeric(7));
+                findUser.addRefreshToken(refreshToken);
+                resDto.setAccessToken(accessToken);
+                resDto.setRefreshToken(refreshToken);
             }
         }
 
-        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "TOKEN", token);
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "로그인 성공", resDto);
+    }
+
+    public CommonResponse<LoginResDto> refreshToken(HttpServletRequest request) {
+        String accessToken = request.getHeader("Access");
+        String refreshToken = request.getHeader("Refresh");
+
+        jwtTokenProvider.validateRefreshToken(refreshToken);
+
+        String userEmailFromAccessToken = jwtTokenProvider.getUserPk(accessToken);
+        User user = userRepository.findByEmail(userEmailFromAccessToken);
+
+        if (user == null) {
+            return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "사용자가 존재하지 않습니다.");
+        }
+
+        if (!user.getRefreshToken().equals(refreshToken)) {
+            return CommonResponse.response(StatusCodeEnum.BAD_REQUEST.getStatus(), "Refresh Token의 유저 정보가 일치하지 않습니다.");
+        }
+
+        LoginResDto resDto = new LoginResDto();
+        String newRefreshToken = jwtTokenProvider.createRefreshToken(RandomStringUtils.randomAlphanumeric(7));
+        resDto.setAccessToken(jwtTokenProvider.createAccessToken(user.getId().toString(), Collections.singletonList(Role.USER.getKey())));
+        resDto.setRefreshToken(newRefreshToken);
+        user.addRefreshToken(newRefreshToken);
+
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "토큰 재발급 성공", resDto);
+    }
+
+    // todo logout : token 삭제
+
+    private String createEncodedPassword(String email, String password) {
+        StringBuilder encodedPassword = new StringBuilder();
+        try {
+            PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), email.getBytes(StandardCharsets.UTF_8), 1024, 64 * 8);
+            SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+
+            byte[] bytes = keyFactory.generateSecret(spec).getEncoded();
+            for (final byte b : bytes) {
+                encodedPassword.append(String.format("%02x", b & 0xff));
+            }
+        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
+            e.printStackTrace();
+        }
+        return encodedPassword.toString();
     }
 }

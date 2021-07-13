@@ -33,25 +33,17 @@ public class User extends TimeEntity implements UserDetails {
     @Column(length = 75)
     private String email;
 
-    @Column(length = 75)
+    @Column(columnDefinition = "LONGTEXT")
     private String password;
-
-    @Column(columnDefinition = "VARCHAR(100) COMMENT 'Github 주소 입력'")
-    private String github;
-
-    @Column(columnDefinition = "VARCHAR(100) COMMENT '링크드인 주소 입력'")
-    private String linkedin;
-
-    @Column(name = "profile_image")
-    private String profileImage;
-
-    private String introduction;
 
     @Column(columnDefinition = "VARCHAR(10) COMMENT 'GOOGLE || NAVER' ")
     private String type;
 
+    @Column(columnDefinition = "LONGTEXT")
     private String token;
-    private String accessToken;
+
+    @Column(columnDefinition = "LONGTEXT")
+    private String refreshToken;
 
     @Column(nullable = false)
     private String role;
@@ -95,7 +87,11 @@ public class User extends TimeEntity implements UserDetails {
         return false;
     }
 
-    public void addAccessToken(String accessToken) {
-        this.accessToken = accessToken;
+    public void addRefreshToken(String refreshToken) {
+        this.refreshToken = refreshToken;
+    }
+
+    public void updatePassword(String password) {
+        this.password = password;
     }
 }
