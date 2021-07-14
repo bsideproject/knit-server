@@ -12,6 +12,4 @@ import javax.validation.constraints.NotNull;
 public class ThreadLikeReqDto {
     @NotNull
     private Long threadId;
-    @NotNull
-    private Long userId;
 }
