@@ -6,12 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.persistence.OneToMany;
+import javax.persistence.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,6 +38,10 @@ public class Thread extends TimeEntity {
     @Column(name = "cover_image")
     private String coverImage;
 
+    @OneToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id")
+    private User user;
+
     @JsonManagedReference
     @OneToMany(mappedBy = "thread")
     private List<Content> contents = new ArrayList<>();
@@ -69,7 +68,8 @@ public class Thread extends TimeEntity {
     private String isFeatured;
 
     @Builder
-    public Thread(String coverImage, String threadTitle, String threadSubTitle, String thumbnailUrl, String threadSummary, String status) {
+    public Thread(User user, String coverImage, String threadTitle, String threadSubTitle, String thumbnailUrl, String threadSummary, String status) {
+        this.user = user;
         this.coverImage = coverImage;
         this.threadTitle = threadTitle;
         this.threadSubTitle = threadSubTitle;
@@ -100,6 +100,7 @@ public class Thread extends TimeEntity {
     }
 
     public void update(String threadSubTitle, String thumbnailUrl, String threadSummary) {
+        this.user = user;
         this.threadSubTitle = threadSubTitle;
         this.thumbnailUrl = thumbnailUrl;
         this.threadSummary = threadSummary;

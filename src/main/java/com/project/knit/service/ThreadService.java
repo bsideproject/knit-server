@@ -2,18 +2,10 @@ package com.project.knit.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.project.knit.domain.entity.Category;
-import com.project.knit.domain.entity.Content;
-import com.project.knit.domain.entity.Reference;
-import com.project.knit.domain.entity.Tag;
+import com.project.knit.config.jwt.JwtTokenProvider;
+import com.project.knit.domain.entity.*;
 import com.project.knit.domain.entity.Thread;
-import com.project.knit.domain.entity.ThreadLike;
-import com.project.knit.domain.repository.CategoryRepository;
-import com.project.knit.domain.repository.ContentRepository;
-import com.project.knit.domain.repository.ReferenceRepository;
-import com.project.knit.domain.repository.TagRepository;
-import com.project.knit.domain.repository.ThreadLikeRepository;
-import com.project.knit.domain.repository.ThreadRepository;
+import com.project.knit.domain.repository.*;
 import com.project.knit.dto.req.ThreadCreateReqDto;
 import com.project.knit.dto.req.ThreadLikeReqDto;
 import com.project.knit.dto.req.ThreadUpdateReqDto;
@@ -27,6 +19,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.List;
@@ -43,8 +36,15 @@ public class ThreadService {
     private final CategoryRepository categoryRepository;
     private final ReferenceRepository referenceRepository;
     private final ThreadLikeRepository threadLikeRepository;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final UserRepository userRepository;
 
-    public CommonResponse<ThreadShortListResDto> getThreadInfoList() {
+    public CommonResponse<ThreadShortListResDto> getThreadInfoList(HttpServletRequest request) {
+        String accessToken = jwtTokenProvider.resolveToken(request);
+        jwtTokenProvider.validateAccessToken(accessToken);
+        String email = jwtTokenProvider.getUserPk(accessToken);
+        User user = userRepository.findByEmail(email);
+
         ThreadShortListResDto resDto = new ThreadShortListResDto();
         List<ThreadShortResDto> shortResDtos = new ArrayList<>();
         List<Thread> threads = threadRepository.findAllByStatusOrderByModifiedDateDesc(ThreadStatus.승인.name());
@@ -73,7 +73,12 @@ public class ThreadService {
     }
 
     @Transactional
-    public CommonResponse<ThreadResDto> getThreadInfoById(Long id) {
+    public CommonResponse<ThreadResDto> getThreadInfoById(Long id, HttpServletRequest request) {
+        String accessToken = jwtTokenProvider.resolveToken(request);
+        jwtTokenProvider.validateAccessToken(accessToken);
+        String email = jwtTokenProvider.getUserPk(accessToken);
+        User user = userRepository.findByEmail(email);
+
         Thread thread = threadRepository.findByIdAndStatus(id, ThreadStatus.승인.name());
         if (thread == null) {
             return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "Thread Not Found.");
@@ -140,7 +145,12 @@ public class ThreadService {
     }
 
     @Transactional
-    public <T> CommonResponse<T> registerThread(ThreadCreateReqDto threadCreateReqDto) {
+    public <T> CommonResponse<T> registerThread(ThreadCreateReqDto threadCreateReqDto, HttpServletRequest httpServletRequest) {
+        String accessToken = jwtTokenProvider.resolveToken(httpServletRequest);
+        jwtTokenProvider.validateAccessToken(accessToken);
+        String email = jwtTokenProvider.getUserPk(accessToken);
+        User user = userRepository.findByEmail(email);
+
         ObjectMapper mapper = new ObjectMapper();
         try {
             String request = mapper.writeValueAsString(threadCreateReqDto);
@@ -150,6 +160,7 @@ public class ThreadService {
         }
 
         Thread thread = Thread.builder()
+                .user(user)
                 .threadTitle(threadCreateReqDto.getTitle())
                 .threadSubTitle(threadCreateReqDto.getSubTitle())
                 .coverImage(threadCreateReqDto.getCoverImage() == null ? "https://knit-document.s3.ap-northeast-2.amazonaws.com/thread/cover/knitwki_cover_default.png" : threadCreateReqDto.getCoverImage())
@@ -224,12 +235,18 @@ public class ThreadService {
     }
 
     @Transactional
-    public <T> CommonResponse<T> updateThread(Long threadId, ThreadUpdateReqDto threadUpdateReqDto) {
+    public <T> CommonResponse<T> updateThread(Long threadId, ThreadUpdateReqDto threadUpdateReqDto, HttpServletRequest request) {
+        String accessToken = jwtTokenProvider.resolveToken(request);
+        jwtTokenProvider.validateAccessToken(accessToken);
+        String email = jwtTokenProvider.getUserPk(accessToken);
+        User user = userRepository.findByEmail(email);
+
         Thread findThread = threadRepository.findByIdAndStatus(threadId, ThreadStatus.승인.name());
         if (findThread == null) {
             return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "Thread to update Not Found.");
         }
 
+        // todo user가 아니라 contributors!
         findThread.update(threadUpdateReqDto.getSubTitle(), threadUpdateReqDto.getThumbnailUrl(), threadUpdateReqDto.getSummary());
 
         Long findThreadId = findThread.getId();
@@ -305,7 +322,12 @@ public class ThreadService {
     }
 
 
-    public CommonResponse<ThreadListResDto> getThreadListByTagId(Long tagId) {
+    public CommonResponse<ThreadListResDto> getThreadListByTagId(Long tagId, HttpServletRequest request) {
+        String accessToken = jwtTokenProvider.resolveToken(request);
+        jwtTokenProvider.validateAccessToken(accessToken);
+        String email = jwtTokenProvider.getUserPk(accessToken);
+        User user = userRepository.findByEmail(email);
+
         Tag tag = tagRepository.findById(tagId).orElse(null);
         List<Tag> tagList = new ArrayList<>();
         tagList.add(tag);
@@ -399,7 +421,6 @@ public class ThreadService {
     }
 
     public CommonResponse<ThreadMostViewedListResDto> getMostViewedList() {
-
         List<Thread> mostViewedThreadList = threadRepository.findTop6ByStatusOrderByViewCountDesc(ThreadStatus.승인.name());
 
         ThreadMostViewedListResDto resDto = new ThreadMostViewedListResDto();
@@ -444,7 +465,12 @@ public class ThreadService {
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Featured Thread Found.", resDto);
     }
 
-    public <T> CommonResponse<T> likeThread(ThreadLikeReqDto threadLikeReqDto) {
+    public <T> CommonResponse<T> likeThread(ThreadLikeReqDto threadLikeReqDto, HttpServletRequest request) {
+        String accessToken = jwtTokenProvider.resolveToken(request);
+        jwtTokenProvider.validateAccessToken(accessToken);
+        String email = jwtTokenProvider.getUserPk(accessToken);
+        User user = userRepository.findByEmail(email);
+
         Thread findThread = threadRepository.findByIdAndStatus(threadLikeReqDto.getThreadId(), ThreadStatus.승인.name());
         if (findThread == null) {
             return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "Thread Not Found.");

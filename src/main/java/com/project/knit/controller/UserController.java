@@ -5,6 +5,7 @@ import com.project.knit.dto.req.ProfileUpdateReqDto;
 import com.project.knit.dto.res.CommonResponse;
 import com.project.knit.dto.res.LoginResDto;
 import com.project.knit.dto.res.ProfileResDto;
+import com.project.knit.dto.res.ThreadListResDto;
 import com.project.knit.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +44,10 @@ public class UserController {
     }
 
     // 등재전대기문서
-//    @GetMapping("/history")
+    @GetMapping("/waiting")
+    public ResponseEntity<CommonResponse<ThreadListResDto>> getUserWaitingThreadList(HttpServletRequest request) {
+        return new ResponseEntity<>(userService.getUserWaitingThreadList(request), HttpStatus.OK);
+    }
 
     // profile update
     @PostMapping("/profile")

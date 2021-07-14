@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.io.IOException;
 import java.util.List;
@@ -41,28 +42,28 @@ public class ThreadController {
     private final S3Service s3Service;
 
     @GetMapping("/v1/threads/list")
-    public ResponseEntity<CommonResponse<ThreadShortListResDto>> getThreadInfoList() {
-        return new ResponseEntity<>(threadService.getThreadInfoList(), HttpStatus.OK);
+    public ResponseEntity<CommonResponse<ThreadShortListResDto>> getThreadInfoList(HttpServletRequest request) {
+        return new ResponseEntity<>(threadService.getThreadInfoList(request), HttpStatus.OK);
     }
 
     @GetMapping("/thread/{threadId}")
-    public ResponseEntity<CommonResponse<ThreadResDto>> getThreadInfoById(@PathVariable Long threadId) {
-        return new ResponseEntity<>(threadService.getThreadInfoById(threadId), HttpStatus.OK);
+    public ResponseEntity<CommonResponse<ThreadResDto>> getThreadInfoById(@PathVariable Long threadId, HttpServletRequest request) {
+        return new ResponseEntity<>(threadService.getThreadInfoById(threadId, request), HttpStatus.OK);
     }
 
     @PostMapping("/v1/threads/register")
-    public ResponseEntity<CommonResponse> registerThread(@Valid @RequestBody ThreadCreateReqDto threadCreateReqDto) {
-        return new ResponseEntity<>(threadService.registerThread(threadCreateReqDto), HttpStatus.OK);
+    public ResponseEntity<CommonResponse> registerThread(@Valid @RequestBody ThreadCreateReqDto threadCreateReqDto, HttpServletRequest request) {
+        return new ResponseEntity<>(threadService.registerThread(threadCreateReqDto, request), HttpStatus.OK);
     }
 
     @PostMapping("/v1/threads/update/{threadId}")
-    public ResponseEntity<CommonResponse> updateRegisterThread(@PathVariable Long threadId, @Valid @RequestBody ThreadUpdateReqDto threadUpdateReqDto) {
-        return new ResponseEntity<>(threadService.updateThread(threadId, threadUpdateReqDto), HttpStatus.OK);
+    public ResponseEntity<CommonResponse> updateRegisterThread(@PathVariable Long threadId, @Valid @RequestBody ThreadUpdateReqDto threadUpdateReqDto, HttpServletRequest request) {
+        return new ResponseEntity<>(threadService.updateThread(threadId, threadUpdateReqDto, request), HttpStatus.OK);
     }
 
     @GetMapping("/v1/threads/tag/{tagId}")
-    public ResponseEntity<CommonResponse<ThreadListResDto>> getThreadListByTagId(@PathVariable Long tagId) {
-        return new ResponseEntity<>(threadService.getThreadListByTagId(tagId), HttpStatus.OK);
+    public ResponseEntity<CommonResponse<ThreadListResDto>> getThreadListByTagId(@PathVariable Long tagId, HttpServletRequest request) {
+        return new ResponseEntity<>(threadService.getThreadListByTagId(tagId, request), HttpStatus.OK);
     }
 
     @GetMapping("/v1/threads/tag/validation")
@@ -86,8 +87,8 @@ public class ThreadController {
     }
 
     @PostMapping("/v1/threads/like")
-    public ResponseEntity<CommonResponse> likeThread(@Valid @RequestBody ThreadLikeReqDto threadLikeReqDto) {
-        return new ResponseEntity<>(threadService.likeThread(threadLikeReqDto), HttpStatus.OK);
+    public ResponseEntity<CommonResponse> likeThread(@Valid @RequestBody ThreadLikeReqDto threadLikeReqDto, HttpServletRequest request) {
+        return new ResponseEntity<>(threadService.likeThread(threadLikeReqDto, request), HttpStatus.OK);
     }
 
     // todo cancel like
