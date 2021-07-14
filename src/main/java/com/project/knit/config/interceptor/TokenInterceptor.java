@@ -25,6 +25,8 @@ public class TokenInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        log.info("[TEMP] getPathInfo() : {}", request.getPathInfo());
+        log.info("[TEMP] getMethod() : {}", request.getMethod());
         String givenAccessToken = jwtTokenProvider.resolveToken(request);
         log.info("given token : {}", givenAccessToken);
         String email = jwtTokenProvider.getUserPk(givenAccessToken);
