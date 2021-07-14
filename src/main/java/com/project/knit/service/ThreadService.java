@@ -480,7 +480,7 @@ public class ThreadService {
 
         ThreadLike threadLike = ThreadLike.builder()
                 .threadId(threadLikeReqDto.getThreadId())
-                .userId(threadLikeReqDto.getUserId())
+                .userId(user.getId())
                 .build();
 
         threadLikeRepository.save(threadLike);
