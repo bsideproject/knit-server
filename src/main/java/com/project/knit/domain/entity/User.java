@@ -26,9 +26,6 @@ public class User extends TimeEntity implements UserDetails {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(length = 45)
-    private String nickname;
-
     @Email
     @Column(length = 75)
     private String email;

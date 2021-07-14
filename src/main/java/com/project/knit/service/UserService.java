@@ -1,12 +1,17 @@
 package com.project.knit.service;
 
 import com.project.knit.config.jwt.JwtTokenProvider;
+import com.project.knit.domain.entity.Profile;
 import com.project.knit.domain.entity.User;
+import com.project.knit.domain.repository.ProfileRepository;
 import com.project.knit.domain.repository.UserRepository;
 import com.project.knit.dto.req.LoginReqDto;
+import com.project.knit.dto.req.ProfileUpdateReqDto;
 import com.project.knit.dto.res.CommonResponse;
 import com.project.knit.dto.res.LoginResDto;
+import com.project.knit.dto.res.ProfileResDto;
 import com.project.knit.service.social.SocialOauth;
+import com.project.knit.utils.StringUtils;
 import com.project.knit.utils.enums.Role;
 import com.project.knit.utils.enums.SocialLoginType;
 import com.project.knit.utils.enums.StatusCodeEnum;
@@ -34,6 +39,7 @@ public class UserService {
     private final List<SocialOauth> socialOauthList;
     private final HttpServletResponse response;
     private final UserRepository userRepository;
+    private final ProfileRepository profileRepository;
     private final JwtTokenProvider jwtTokenProvider;
 
     public void request(SocialLoginType socialLoginType) {
@@ -79,7 +85,15 @@ public class UserService {
                     .build();
 
             User createdUser = userRepository.save(user);
-            // todo create profile
+
+            Profile profile = Profile.builder()
+                    .user(createdUser)
+                    .email(createdUser.getEmail())
+                    .nickname(StringUtils.getAdjNickname() + StringUtils.getNounNickname() + RandomStringUtils.randomNumeric(4))
+                    .build();
+
+            profileRepository.save(profile);
+
             accessToken = jwtTokenProvider.createAccessToken(createdUser.getEmail(), Collections.singletonList(createdUser.getRole()));
             refreshToken = jwtTokenProvider.createRefreshToken(RandomStringUtils.randomAlphanumeric(7));
             createdUser.addRefreshToken(refreshToken);
@@ -122,6 +136,49 @@ public class UserService {
         user.addRefreshToken(newRefreshToken);
 
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "토큰 재발급 성공", resDto);
+    }
+
+    public CommonResponse<ProfileResDto> getProfileInfo(HttpServletRequest request) {
+        String accessToken = jwtTokenProvider.resolveToken(request);
+        jwtTokenProvider.validateAccessToken(accessToken);
+        String email = jwtTokenProvider.getUserPk(accessToken);
+        User user = userRepository.findByEmail(email);
+
+        Profile profile = profileRepository.findByUser(user);
+
+        ProfileResDto resDto = new ProfileResDto();
+        resDto.setEmail(user.getEmail());
+        resDto.setNickname(profile.getNickname());
+        resDto.setGithub(profile.getGithub() == null ? null : profile.getGithub());
+        resDto.setLinkedIn(profile.getLinkedIn() == null ? null : profile.getLinkedIn());
+        resDto.setIntroduction(profile.getIntroduction() == null ? null : profile.getIntroduction());
+
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Profile Info Found", resDto);
+    }
+
+    @Transactional
+    public CommonResponse<ProfileResDto> updateProfile(HttpServletRequest request, ProfileUpdateReqDto profileUpdateReqDto) {
+        String accessToken = jwtTokenProvider.resolveToken(request);
+        jwtTokenProvider.validateAccessToken(accessToken);
+        String email = jwtTokenProvider.getUserPk(accessToken);
+        User user = userRepository.findByEmail(email);
+
+        Profile profile = profileRepository.findByUser(user);
+        profile.updateProfile(
+                profileUpdateReqDto.getNickname() == null ? profile.getNickname() : profileUpdateReqDto.getNickname(),
+                profileUpdateReqDto.getGithub() == null ? profile.getGithub() : profileUpdateReqDto.getGithub(),
+                profileUpdateReqDto.getLinkedIn() == null ? profile.getLinkedIn() : profileUpdateReqDto.getLinkedIn(),
+                profileUpdateReqDto.getIntroduction() == null ? profile.getIntroduction() : profileUpdateReqDto.getIntroduction()
+        );
+
+        ProfileResDto resDto = new ProfileResDto();
+        resDto.setEmail(user.getEmail());
+        resDto.setNickname(profile.getNickname());
+        resDto.setGithub(profile.getGithub() == null ? null : profile.getGithub());
+        resDto.setLinkedIn(profile.getLinkedIn() == null ? null : profile.getLinkedIn());
+        resDto.setIntroduction(profile.getIntroduction() == null ? null : profile.getIntroduction());
+
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Profile Updated", resDto);
     }
 
     // todo logout : token 삭제

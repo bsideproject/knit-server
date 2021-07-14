@@ -1,6 +1,7 @@
 package com.project.knit.domain.entity;
 
 import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -22,14 +23,30 @@ public class Profile extends TimeEntity {
 
     private String email;
 
+    private String nickname;
+
     @Column(columnDefinition = "VARCHAR(100) COMMENT 'Github 주소 입력'")
     private String github;
 
     @Column(columnDefinition = "VARCHAR(100) COMMENT '링크드인 주소 입력'")
-    private String linkedin;
+    private String linkedIn;
+
+    private String introduction;
 
     @Column(name = "profile_image")
     private String profileImage;
 
-    private String introduction;
+    @Builder
+    public Profile(User user, String email, String nickname) {
+        this.user = user;
+        this.email = email;
+        this.nickname = nickname;
+    }
+
+    public void updateProfile(String nickname, String github, String linkedIn, String introduction) {
+        this.nickname = nickname;
+        this.github = github;
+        this.linkedIn = linkedIn;
+        this.introduction = introduction;
+    }
 }
