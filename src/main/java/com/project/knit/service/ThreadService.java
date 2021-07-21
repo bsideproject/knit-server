@@ -428,6 +428,7 @@ public class ThreadService {
         mostViewedThreadList.forEach(t -> {
             ThreadMostViewedResDto mostViewedResDto = new ThreadMostViewedResDto();
             mostViewedResDto.setThreadId(t.getId());
+            mostViewedResDto.setTitle(t.getThreadTitle());
             mostViewedResDto.setContentSummary(t.getThreadSummary());
             mostViewedResDto.setLikeCount(t.getLikeCount());
             mostViewedResDto.setViewCount(t.getViewCount());
@@ -575,17 +576,19 @@ public class ThreadService {
 
     public CommonResponse<ThreadPagingResDto> getTagSearchList(String tag, Integer page) {
 
-        // todo 직군 태그 (category)
         log.info("[TEMP] keyword-tag : {}", tag);
         List<Tag> tags = tagRepository.findAllByTagName(tag);
         List<Tag> distinctTags = tags.stream().distinct().collect(Collectors.toList());
+
+        List<Category> categories = categoryRepository.findAllByCategory(tag);
+        List<Category> distinctCategories = categories.stream().distinct().collect(Collectors.toList());
 
         if (page == null) {
             page = 0;
         }
 
         // 최근 편집 순서
-        List<Thread> threadList = threadRepository.findAllByTagsIn(PageRequest.of(page - 1, 10, Sort.by("modifiedDate").descending()), distinctTags);
+        List<Thread> threadList = threadRepository.findAllByTagsInOrCategoriesIn(PageRequest.of(page - 1, 10, Sort.by("modifiedDate").descending()), distinctTags, distinctCategories);
 
         ThreadPagingResDto resDto = new ThreadPagingResDto();
         resDto.setCount(threadRepository.countAllByTagsInAndStatus(distinctTags, ThreadStatus.승인.name()));

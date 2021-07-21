@@ -7,5 +7,8 @@ import java.util.List;
 
 public interface CategoryRepository extends JpaRepository<Category, Long> {
     List<Category> findAllByThreadId(Long threadId);
+
     void deleteAllByThreadId(Long threadId);
+
+    List<Category> findAllByCategory(String category);
 }

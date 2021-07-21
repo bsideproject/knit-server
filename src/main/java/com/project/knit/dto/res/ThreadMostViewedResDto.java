@@ -9,6 +9,7 @@ import lombok.Setter;
 @NoArgsConstructor
 public class ThreadMostViewedResDto {
     private Long threadId;
+    private String title;
     private String contentSummary;
     private Long viewCount;
     private Long likeCount;

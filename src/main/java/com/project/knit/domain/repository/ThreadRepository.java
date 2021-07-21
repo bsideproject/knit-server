@@ -1,9 +1,7 @@
 package com.project.knit.domain.repository;
 
-import com.project.knit.domain.entity.Content;
-import com.project.knit.domain.entity.Tag;
+import com.project.knit.domain.entity.*;
 import com.project.knit.domain.entity.Thread;
-import com.project.knit.domain.entity.User;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
@@ -28,7 +26,7 @@ public interface ThreadRepository extends JpaRepository<Thread, Long> {
 
     Integer countAllByTagsInAndStatus(List<Tag> tagList, String status);
 
-    List<Thread> findAllByTagsIn(Pageable pageable, List<Tag> tagList);
+    List<Thread> findAllByTagsInOrCategoriesIn(Pageable pageable, List<Tag> tagList, List<Category> categoryList);
 
     Thread findByIsFeatured(String isFeatured);
 
