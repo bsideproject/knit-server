@@ -43,7 +43,6 @@ public class ThreadService {
         String accessToken = jwtTokenProvider.resolveToken(request);
         jwtTokenProvider.validateAccessToken(accessToken);
         String email = jwtTokenProvider.getUserPk(accessToken);
-        User user = userRepository.findByEmail(email);
 
         ThreadShortListResDto resDto = new ThreadShortListResDto();
         List<ThreadShortResDto> shortResDtos = new ArrayList<>();
@@ -570,6 +569,8 @@ public class ThreadService {
             threadResList.add(res);
         }
         resDto.setThreads(threadResList);
+        // todo refactoring if
+        resDto.setNextPage(page + 1);
 
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Keyword Search List.", resDto);
     }
@@ -646,6 +647,8 @@ public class ThreadService {
             threadResList.add(res);
         }
         resDto.setThreads(threadResList);
+        // todo refactoring if
+        resDto.setNextPage(page + 1);
 
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Tag Search List.", resDto);
     }
