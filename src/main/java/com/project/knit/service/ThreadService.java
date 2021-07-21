@@ -568,6 +568,7 @@ public class ThreadService {
 
             threadResList.add(res);
         }
+        resDto.setCount(threadRepository.countAllByThreadTitleOrContentsIn(search, contentList));
         resDto.setThreads(threadResList);
         // todo refactoring if
         resDto.setNextPage(page + 1);
@@ -646,6 +647,7 @@ public class ThreadService {
 
             threadResList.add(res);
         }
+        resDto.setCount(threadRepository.countAllByTagsInOrCategoriesIn(tags, categories));
         resDto.setThreads(threadResList);
         // todo refactoring if
         resDto.setNextPage(page + 1);

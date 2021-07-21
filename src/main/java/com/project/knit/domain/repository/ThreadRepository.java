@@ -31,4 +31,8 @@ public interface ThreadRepository extends JpaRepository<Thread, Long> {
     Thread findByIsFeatured(String isFeatured);
 
     List<Thread> findAllByUserAndStatusOrderByCreatedDateDesc(User user, String status);
+
+    Integer countAllByTagsInOrCategoriesIn(List<Tag> tagList, List<Category> categoryList);
+
+    Integer countAllByThreadTitleOrContentsIn(String title, List<Content> contentList);
 }
