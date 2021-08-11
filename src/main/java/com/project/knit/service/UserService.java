@@ -14,12 +14,19 @@ import com.project.knit.dto.req.ProfileUpdateReqDto;
 import com.project.knit.dto.res.*;
 import com.project.knit.service.social.SocialOauth;
 import com.project.knit.utils.StringUtils;
-import com.project.knit.utils.enums.*;
+import com.project.knit.utils.enums.Role;
+import com.project.knit.utils.enums.SocialLoginType;
+import com.project.knit.utils.enums.StatusCodeEnum;
+import com.project.knit.utils.enums.ThreadStatus;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -45,6 +52,8 @@ public class UserService {
     private final ContentRepository contentRepository;
     private final JwtTokenProvider jwtTokenProvider;
 
+    private final RestTemplate restTemplate = new RestTemplate();
+
     public void request(SocialLoginType socialLoginType) {
         SocialOauth socialOauth = this.findSocialOauthByType(socialLoginType);
         String redirectURL = socialOauth.getOauthRedirectURL();
@@ -69,25 +78,37 @@ public class UserService {
 
     @Transactional
     public CommonResponse<LoginResDto> login(LoginReqDto loginReqDto) {
-        log.info("loginReqDto.getToken() : {}", loginReqDto.getToken());
-        String snsToken = requestAccessToken(SocialLoginType.valueOf(loginReqDto.getType().toUpperCase()), loginReqDto.getToken());
+        String code = loginReqDto.getToken();
+        log.info("loginReqDto.getToken() : {}", code);
+        String snsToken = requestAccessToken(SocialLoginType.valueOf(loginReqDto.getType().toUpperCase()), code);
         log.info("requested sns access token result : {}", snsToken);
 
-        String accessToken = null;
-        String refreshToken = null;
-        User findUser = userRepository.findByEmail(loginReqDto.getEmail());
-        String encodedPassword = createEncodedPassword(loginReqDto.getEmail(), loginReqDto.getPassword());
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + snsToken);
+
+        HttpEntity<String> request = new HttpEntity<>(headers);
+
+        ResponseEntity<GoogleEmailResDto> responseEntity = restTemplate.postForEntity("https://openidconnect.googleapis.com/v1/userinfo", request, GoogleEmailResDto.class);
+        String email = responseEntity.getBody().getEmail();
+        log.info("response : {}", email);
+
+        String accessToken;
+        String refreshToken;
+        User findUser = userRepository.findByEmail(email);
         LoginResDto resDto = new LoginResDto();
         if (findUser == null) {
             User user = User.builder()
-                    .email(loginReqDto.getEmail())
-                    .password(encodedPassword)
+                    .email(email)
+                    .password(code)
                     .type(loginReqDto.getType())
                     .token(loginReqDto.getToken())
                     .role(Role.USER.getKey())
                     .build();
 
             User createdUser = userRepository.save(user);
+            log.info(StringUtils.getAdjNickname());
+            log.info(StringUtils.getNounNickname());
+            log.info(RandomStringUtils.randomNumeric(4));
 
             Profile profile = Profile.builder()
                     .user(createdUser)
@@ -103,7 +124,7 @@ public class UserService {
             resDto.setAccessToken(accessToken);
             resDto.setRefreshToken(refreshToken);
         } else {
-            if (loginReqDto.getEmail().equals(findUser.getEmail()) && loginReqDto.getPassword().equals(findUser.getPassword())) {
+            if (email.equals(findUser.getEmail()) && code.equals(findUser.getPassword())) {
                 accessToken = jwtTokenProvider.createAccessToken(findUser.getEmail(), Collections.singletonList(findUser.getRole()));
                 refreshToken = jwtTokenProvider.createRefreshToken(RandomStringUtils.randomAlphanumeric(7));
                 findUser.addRefreshToken(refreshToken);

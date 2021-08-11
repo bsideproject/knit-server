@@ -1,5 +1,6 @@
 package com.project.knit.service.social;
 
+import com.project.knit.dto.res.GoogleTokenResDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -28,7 +29,7 @@ public class GoogleOauth implements SocialOauth {
     @Override
     public String getOauthRedirectURL() {
         Map<String, Object> params = new HashMap<>();
-        params.put("scope", "profile");
+        params.put("scope", "email");
         params.put("response_type", "code");
         params.put("client_id", GOOGLE_SNS_CLIENT_ID);
         params.put("redirect_uri", GOOGLE_SNS_CALLBACK_URL);
@@ -52,13 +53,14 @@ public class GoogleOauth implements SocialOauth {
         params.put("redirect_uri", GOOGLE_SNS_CALLBACK_URL);
         params.put("grant_type", "authorization_code");
 
-        ResponseEntity<String> responseEntity =
-                restTemplate.postForEntity(GOOGLE_SNS_TOKEN_BASE_URL, params, String.class);
+        ResponseEntity<GoogleTokenResDto> responseEntity =
+                restTemplate.postForEntity(GOOGLE_SNS_TOKEN_BASE_URL, params, GoogleTokenResDto.class);
 
         if (responseEntity.getStatusCode() == HttpStatus.OK) {
-            return responseEntity.getBody();
+            return responseEntity.getBody().getAccess_token();
+        } else {
+            return "구글 로그인 요청 처리 실패";
         }
-        return "구글 로그인 요청 처리 실패";
     }
 
 //    public String requestAccessTokenUsingURL(String code) {

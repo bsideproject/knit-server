@@ -1,10 +1,6 @@
 package com.project.knit.controller;
 
-import com.project.knit.dto.res.CommonResponse;
-import com.project.knit.dto.res.ThreadFeaturedResDto;
-import com.project.knit.dto.res.ThreadMostViewedListResDto;
-import com.project.knit.dto.res.ThreadPagingResDto;
-import com.project.knit.dto.res.ThreadRecentChangedResDto;
+import com.project.knit.dto.res.*;
 import com.project.knit.service.S3Service;
 import com.project.knit.service.ThreadService;
 import lombok.RequiredArgsConstructor;

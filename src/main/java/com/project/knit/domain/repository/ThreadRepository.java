@@ -1,7 +1,7 @@
 package com.project.knit.domain.repository;
 
-import com.project.knit.domain.entity.*;
 import com.project.knit.domain.entity.Thread;
+import com.project.knit.domain.entity.*;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
