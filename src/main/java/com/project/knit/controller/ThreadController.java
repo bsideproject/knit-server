@@ -35,8 +35,8 @@ public class ThreadController {
     }
 
     @GetMapping("/thread/{threadId}")
-    public ResponseEntity<CommonResponse<ThreadResDto>> getThreadInfoById(@PathVariable Long threadId, HttpServletRequest request) {
-        return new ResponseEntity<>(threadService.getThreadInfoById(threadId, request), HttpStatus.OK);
+    public ResponseEntity<CommonResponse<ThreadResDto>> getThreadInfoById(@PathVariable Long threadId) {
+        return new ResponseEntity<>(threadService.getThreadInfoById(threadId), HttpStatus.OK);
     }
 
     @PostMapping("/v1/threads/register")

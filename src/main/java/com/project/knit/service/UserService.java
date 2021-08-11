@@ -218,8 +218,7 @@ public class UserService {
             res.setId(t.getId());
             res.setTitle(t.getThreadTitle());
             res.setSubTitle(t.getThreadSubTitle());
-            res.setThumbnailUrl(t.getThumbnailUrl());
-            res.setCoverImage("https://knit-document.s3.ap-northeast-2.amazonaws.com/thread/cover/cover1.png");
+            res.setThumbnailUrl(t.getThumbnailUrl() == null ? "https://knit-document.s3.ap-northeast-2.amazonaws.com/thread/cover/cover1.png" : t.getThumbnailUrl());
             List<ContentResDto> contentList = new ArrayList<>();
             List<Content> contents = contentRepository.findAllByThreadIdOrderBySequence(t.getId());
             contents.forEach(c -> {

@@ -72,12 +72,7 @@ public class ThreadService {
     }
 
     @Transactional
-    public CommonResponse<ThreadResDto> getThreadInfoById(Long id, HttpServletRequest request) {
-        String accessToken = jwtTokenProvider.resolveToken(request);
-        jwtTokenProvider.validateAccessToken(accessToken);
-        String email = jwtTokenProvider.getUserPk(accessToken);
-        User user = userRepository.findByEmail(email);
-
+    public CommonResponse<ThreadResDto> getThreadInfoById(Long id) {
         Thread thread = threadRepository.findByIdAndStatus(id, ThreadStatus.승인.name());
         if (thread == null) {
             return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "Thread Not Found.");
@@ -134,10 +129,9 @@ public class ThreadService {
         resDto.setId(thread.getId());
         resDto.setTitle(thread.getThreadTitle());
         resDto.setSubTitle(thread.getThreadSubTitle());
-        resDto.setThumbnailUrl(thread.getThumbnailUrl());
+        resDto.setThumbnailUrl(thread.getThumbnailUrl() == null ? "https://knit-document.s3.ap-northeast-2.amazonaws.com/thread/cover/cover1.png" : thread.getThumbnailUrl());
         resDto.setDate(thread.getCreatedDate());
         resDto.setIsFeatured(thread.getIsFeatured());
-        resDto.setCoverImage("https://knit-document.s3.ap-northeast-2.amazonaws.com/thread/cover/cover1.png");
 
         thread.addViewCount();
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread Found.", resDto);
@@ -338,8 +332,7 @@ public class ThreadService {
             res.setId(t.getId());
             res.setTitle(t.getThreadTitle());
             res.setSubTitle(t.getThreadSubTitle());
-            res.setThumbnailUrl(t.getThumbnailUrl());
-            res.setCoverImage("https://knit-document.s3.ap-northeast-2.amazonaws.com/thread/cover/cover1.png");
+            res.setThumbnailUrl(t.getThumbnailUrl() == null ? "https://knit-document.s3.ap-northeast-2.amazonaws.com/thread/cover/cover1.png" : t.getThumbnailUrl());
             List<ContentResDto> contentList = new ArrayList<>();
             List<Content> contents = contentRepository.findAllByThreadIdOrderBySequence(t.getId());
             contents.forEach(c -> {
@@ -521,8 +514,7 @@ public class ThreadService {
             res.setId(t.getId());
             res.setTitle(t.getThreadTitle());
             res.setSubTitle(t.getThreadSubTitle());
-            res.setThumbnailUrl(t.getThumbnailUrl());
-            res.setCoverImage("https://knit-document.s3.ap-northeast-2.amazonaws.com/thread/cover/cover1.png");
+            res.setThumbnailUrl(t.getThumbnailUrl() == null ? "https://knit-document.s3.ap-northeast-2.amazonaws.com/thread/cover/cover1.png" : t.getThumbnailUrl());
             List<ContentResDto> contentResList = new ArrayList<>();
             List<Content> contents = contentRepository.findAllByThreadIdOrderBySequence(t.getId());
             contents.forEach(c -> {
@@ -600,8 +592,7 @@ public class ThreadService {
             res.setId(t.getId());
             res.setTitle(t.getThreadTitle());
             res.setSubTitle(t.getThreadSubTitle());
-            res.setThumbnailUrl(t.getThumbnailUrl());
-            res.setCoverImage("https://knit-document.s3.ap-northeast-2.amazonaws.com/thread/cover/cover1.png");
+            res.setThumbnailUrl(t.getThumbnailUrl() == null ? "https://knit-document.s3.ap-northeast-2.amazonaws.com/thread/cover/cover1.png" : t.getThumbnailUrl());
             List<ContentResDto> contentList = new ArrayList<>();
             List<Content> contents = contentRepository.findAllByThreadIdOrderBySequence(t.getId());
             contents.forEach(c -> {
