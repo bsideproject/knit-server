@@ -82,8 +82,4 @@ public class User extends TimeEntity implements UserDetails {
     public void addRefreshToken(String refreshToken) {
         this.refreshToken = refreshToken;
     }
-
-    public void updatePassword(String password) {
-        this.password = password;
-    }
 }

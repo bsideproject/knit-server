@@ -124,10 +124,11 @@ public class UserService {
             resDto.setAccessToken(accessToken);
             resDto.setRefreshToken(refreshToken);
         } else {
-            if (email.equals(findUser.getEmail()) && code.equals(findUser.getPassword())) {
+            if (email.equals(findUser.getEmail())) {
                 accessToken = jwtTokenProvider.createAccessToken(findUser.getEmail(), Collections.singletonList(findUser.getRole()));
                 refreshToken = jwtTokenProvider.createRefreshToken(RandomStringUtils.randomAlphanumeric(7));
                 findUser.addRefreshToken(refreshToken);
+
                 resDto.setAccessToken(accessToken);
                 resDto.setRefreshToken(refreshToken);
             }
