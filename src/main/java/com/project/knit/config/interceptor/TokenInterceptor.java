@@ -43,11 +43,6 @@ public class TokenInterceptor implements HandlerInterceptor {
             log.info("user refresh token : {}", user.getRefreshToken());
             verifyToken(givenAccessToken);
         }
-
-        String givenSnsAccessToken = jwtTokenProvider.resolveTokenEmail(request);
-        if (givenSnsAccessToken != null) {
-            log.info("given sns token : {}", givenSnsAccessToken);
-        }
         return true;
     }
 

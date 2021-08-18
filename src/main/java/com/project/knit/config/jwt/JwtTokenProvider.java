@@ -110,14 +110,6 @@ public class JwtTokenProvider {
         return null;
     }
 
-    public String resolveTokenEmail(HttpServletRequest request) {
-        String bearerToken = request.getHeader("Authorization");
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Email ")) {
-            return bearerToken.substring(7);
-        }
-        return null;
-    }
-
     public boolean validateAccessToken(String accessToken) {
         try {
             String userEmail = getUserPk(accessToken);
