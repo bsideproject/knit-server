@@ -39,6 +39,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @AllArgsConstructor
@@ -77,19 +78,17 @@ public class UserService {
     }
 
     @Transactional
-    public CommonResponse<LoginResDto> login(LoginReqDto loginReqDto) {
-        String code = loginReqDto.getToken();
-        log.info("loginReqDto.getToken() : {}", code);
-        String snsToken = requestAccessToken(SocialLoginType.valueOf(loginReqDto.getType().toUpperCase()), code);
-        log.info("requested sns access token result : {}", snsToken);
+    public CommonResponse<LoginResDto> login(HttpServletRequest request, String type) {
+        String snsToken = jwtTokenProvider.resolveToken(request);
+        log.info("sns access token : {}", snsToken);
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + snsToken);
 
-        HttpEntity<String> request = new HttpEntity<>(headers);
+        HttpEntity<String> userInfoRequest = new HttpEntity<>(headers);
 
-        ResponseEntity<GoogleEmailResDto> responseEntity = restTemplate.postForEntity("https://openidconnect.googleapis.com/v1/userinfo", request, GoogleEmailResDto.class);
-        String email = responseEntity.getBody().getEmail();
+        ResponseEntity<GoogleEmailResDto> responseEntity = restTemplate.postForEntity("https://openidconnect.googleapis.com/v1/userinfo", userInfoRequest, GoogleEmailResDto.class);
+        String email = Objects.requireNonNull(responseEntity.getBody()).getEmail();
         log.info("response : {}", email);
 
         String accessToken;
@@ -99,9 +98,8 @@ public class UserService {
         if (findUser == null) {
             User user = User.builder()
                     .email(email)
-                    .password(code)
-                    .type(loginReqDto.getType())
-                    .token(loginReqDto.getToken())
+                    .type(type.toUpperCase())
+                    .token(snsToken)
                     .role(Role.USER.getKey())
                     .build();
 

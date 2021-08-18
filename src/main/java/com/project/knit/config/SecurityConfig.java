@@ -32,7 +32,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Override
     public void configure(WebSecurity webSecurity) {
         webSecurity.ignoring()
-                .antMatchers("/v1/home/**", "/v1/user/login", "/v1/auth/**", "/actuator/health", "/upload", "/tags", "/categories", "/v1/admin/**", "/v1/auth/**", "/v1/threads/list", "/thread/**");
+                .antMatchers("/v1/home/**", "/v1/auth/**", "/actuator/health", "/upload", "/tags", "/categories", "/v1/admin/**", "/v1/auth/**", "/v1/threads/list", "/thread/**");
     }
 
 //    @Override
