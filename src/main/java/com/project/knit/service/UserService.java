@@ -82,14 +82,14 @@ public class UserService {
         String snsToken = request.getHeader("token");
         log.info("sns access token : {}", snsToken);
 
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("Authorization", "Bearer " + snsToken);
+        String email = "";
+        if (type.equalsIgnoreCase("NAVER")) {
+            email = getNaverUserProfile(snsToken);
+        }
 
-        HttpEntity<String> userInfoRequest = new HttpEntity<>(headers);
-
-        ResponseEntity<GoogleEmailResDto> responseEntity = restTemplate.postForEntity("https://openidconnect.googleapis.com/v1/userinfo", userInfoRequest, GoogleEmailResDto.class);
-        String email = Objects.requireNonNull(responseEntity.getBody()).getEmail();
-        log.info("response : {}", email);
+        if (type.equalsIgnoreCase("GOOGLE")) {
+            email = getGoogleUserProfile(snsToken);
+        }
 
         String accessToken;
         String refreshToken;
@@ -133,6 +133,31 @@ public class UserService {
         }
 
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "로그인 성공", resDto);
+    }
+
+    private String getGoogleUserProfile(String token) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + token);
+
+        HttpEntity<String> userInfoRequest = new HttpEntity<>(headers);
+
+        ResponseEntity<GoogleEmailResDto> responseEntity = restTemplate.postForEntity("https://openidconnect.googleapis.com/v1/userinfo", userInfoRequest, GoogleEmailResDto.class);
+        String email = Objects.requireNonNull(responseEntity.getBody()).getEmail();
+        log.info("response : {}", email);
+
+        return email;
+    }
+
+    private String getNaverUserProfile(String token) {
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + token);
+
+        HttpEntity<String> userInfoRequest = new HttpEntity<>(headers);
+
+        ResponseEntity<NaverEmailResDto> responseEntity = restTemplate.postForEntity("https://openapi.naver.com/v1/nid/me", userInfoRequest, NaverEmailResDto.class);
+        String email = Objects.requireNonNull(responseEntity.getBody().getResponse()).getEmail();
+
+        return email;
     }
 
     public CommonResponse<LoginResDto> refreshToken(HttpServletRequest request) {
