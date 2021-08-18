@@ -30,17 +30,24 @@ public class TokenInterceptor implements HandlerInterceptor {
         }
         log.info("[TEMP] getPathInfo() : {}", request.getPathInfo());
         log.info("[TEMP] getMethod() : {}", request.getMethod());
+
         String givenAccessToken = jwtTokenProvider.resolveToken(request);
-        log.info("given token : {}", givenAccessToken);
-        String email = jwtTokenProvider.getUserPk(givenAccessToken);
-        log.info("email : {}", email);
-        User user = userRepository.findByEmail(email);
-        if (user == null) {
-            throw new IllegalArgumentException("해당 사용자가 존재하지 않습니다.");
+        if (givenAccessToken != null) {
+            log.info("given token : {}", givenAccessToken);
+            String email = jwtTokenProvider.getUserPk(givenAccessToken);
+            log.info("email : {}", email);
+            User user = userRepository.findByEmail(email);
+            if (user == null) {
+                throw new IllegalArgumentException("해당 사용자가 존재하지 않습니다.");
+            }
+            log.info("user refresh token : {}", user.getRefreshToken());
+            verifyToken(givenAccessToken);
         }
 
-        log.info("user refresh token : {}", user.getRefreshToken());
-        verifyToken(givenAccessToken);
+        String givenSnsAccessToken = jwtTokenProvider.resolveTokenEmail(request);
+        if (givenSnsAccessToken != null) {
+            log.info("given sns token : {}", givenSnsAccessToken);
+        }
         return true;
     }
 

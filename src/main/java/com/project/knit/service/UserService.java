@@ -79,7 +79,7 @@ public class UserService {
 
     @Transactional
     public CommonResponse<LoginResDto> login(HttpServletRequest request, String type) {
-        String snsToken = jwtTokenProvider.resolveToken(request);
+        String snsToken = jwtTokenProvider.resolveTokenEmail(request);
         log.info("sns access token : {}", snsToken);
 
         HttpHeaders headers = new HttpHeaders();
