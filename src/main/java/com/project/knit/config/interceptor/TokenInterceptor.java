@@ -25,6 +25,9 @@ public class TokenInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+        if (request.getMethod().equals("OPTIONS")) {
+            return true;
+        }
         log.info("[TEMP] getPathInfo() : {}", request.getPathInfo());
         log.info("[TEMP] getMethod() : {}", request.getMethod());
         String givenAccessToken = jwtTokenProvider.resolveToken(request);
