@@ -13,24 +13,29 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "thread_category")
+@Table(name = "thread_contributor")
 @Getter
 @Entity
-public class ThreadCategory extends TimeEntity {
-    @Column(name = "thread_category_id")
+public class ThreadContributor extends TimeEntity {
+    @Column(name = "thread_contributor_id")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "thread_id")
     private Long threadId;
 
-    @Column(name = "category_id")
-    private Long categoryId;
+    private String threadTitle;
+
+    private String threadType;
+
+    @Column(name = "contributor_user_id")
+    private Long contributorUserId;
 
     @Builder
-    public ThreadCategory(Long threadId, Long categoryId) {
+    public ThreadContributor(Long threadId, String threadTitle, String threadType, Long contributorUserId) {
         this.threadId = threadId;
-        this.categoryId = categoryId;
+        this.threadTitle = threadTitle;
+        this.threadType = threadType;
+        this.contributorUserId = contributorUserId;
     }
 }

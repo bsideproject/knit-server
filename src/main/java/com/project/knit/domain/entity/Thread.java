@@ -83,6 +83,10 @@ public class Thread extends TimeEntity {
         this.status = status;
     }
 
+    public void addContributor(User user) {
+        this.user = user;
+    }
+
     public void addContents(List<Content> contents) {
         this.contents.addAll(contents);
     }
@@ -100,7 +104,6 @@ public class Thread extends TimeEntity {
     }
 
     public void update(String threadSubTitle, String thumbnailUrl, String threadSummary) {
-        this.user = user;
         this.threadSubTitle = threadSubTitle;
         this.thumbnailUrl = thumbnailUrl;
         this.threadSummary = threadSummary;

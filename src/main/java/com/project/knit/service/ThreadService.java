@@ -3,15 +3,32 @@ package com.project.knit.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.knit.config.jwt.JwtTokenProvider;
+import com.project.knit.domain.entity.Category;
+import com.project.knit.domain.entity.Content;
+import com.project.knit.domain.entity.Profile;
+import com.project.knit.domain.entity.Reference;
+import com.project.knit.domain.entity.Tag;
 import com.project.knit.domain.entity.Thread;
-import com.project.knit.domain.entity.*;
-import com.project.knit.domain.repository.*;
+import com.project.knit.domain.entity.ThreadContributor;
+import com.project.knit.domain.entity.ThreadLike;
+import com.project.knit.domain.entity.User;
+import com.project.knit.domain.repository.CategoryRepository;
+import com.project.knit.domain.repository.ContentRepository;
+import com.project.knit.domain.repository.ProfileRepository;
+import com.project.knit.domain.repository.ReferenceRepository;
+import com.project.knit.domain.repository.TagRepository;
+import com.project.knit.domain.repository.ThreadContributorRepository;
+import com.project.knit.domain.repository.ThreadLikeRepository;
+import com.project.knit.domain.repository.ThreadRepository;
+import com.project.knit.domain.repository.UserRepository;
 import com.project.knit.dto.req.ThreadCreateReqDto;
 import com.project.knit.dto.req.ThreadLikeReqDto;
 import com.project.knit.dto.req.ThreadUpdateReqDto;
 import com.project.knit.dto.res.*;
+import com.project.knit.utils.enums.CategoryType;
 import com.project.knit.utils.enums.StatusCodeEnum;
 import com.project.knit.utils.enums.ThreadStatus;
+import com.project.knit.utils.enums.ThreadType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringEscapeUtils;
@@ -38,12 +55,10 @@ public class ThreadService {
     private final ThreadLikeRepository threadLikeRepository;
     private final JwtTokenProvider jwtTokenProvider;
     private final UserRepository userRepository;
+    private final ThreadContributorRepository threadContributorRepository;
+    private final ProfileRepository profileRepository;
 
-    public CommonResponse<ThreadShortListResDto> getThreadInfoList(HttpServletRequest request) {
-        String accessToken = jwtTokenProvider.resolveToken(request);
-        jwtTokenProvider.validateAccessToken(accessToken);
-        String email = jwtTokenProvider.getUserPk(accessToken);
-
+    public CommonResponse<ThreadShortListResDto> getThreadInfoList() {
         ThreadShortListResDto resDto = new ThreadShortListResDto();
         List<ThreadShortResDto> shortResDtos = new ArrayList<>();
         List<Thread> threads = threadRepository.findAllByStatusOrderByModifiedDateDesc(ThreadStatus.승인.name());
@@ -132,6 +147,15 @@ public class ThreadService {
         resDto.setThumbnailUrl(thread.getThumbnailUrl() == null ? "https://knit-document.s3.ap-northeast-2.amazonaws.com/thread/cover/cover1.png" : thread.getThumbnailUrl());
         resDto.setDate(thread.getCreatedDate());
         resDto.setIsFeatured(thread.getIsFeatured());
+        List<ThreadContributor> contributors = threadContributorRepository.findAllByThreadId(threadId);
+        List<String> contributorList = new ArrayList<>();
+        contributors.forEach(c -> {
+            Profile profile = profileRepository.findByUserId(c.getContributorUserId());
+            if (profile != null) {
+                contributorList.add(profile.getNickname());
+            }
+        });
+        resDto.setContributorList(contributorList);
 
         thread.addViewCount();
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread Found.", resDto);
@@ -232,14 +256,13 @@ public class ThreadService {
         String accessToken = jwtTokenProvider.resolveToken(request);
         jwtTokenProvider.validateAccessToken(accessToken);
         String email = jwtTokenProvider.getUserPk(accessToken);
-        User user = userRepository.findByEmail(email);
+        User contributor = userRepository.findByEmail(email);
 
         Thread findThread = threadRepository.findByIdAndStatus(threadId, ThreadStatus.승인.name());
         if (findThread == null) {
             return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "Thread to update Not Found.");
         }
 
-        // todo user가 아니라 contributors!
         findThread.update(threadUpdateReqDto.getSubTitle(), threadUpdateReqDto.getThumbnailUrl(), threadUpdateReqDto.getSummary());
 
         Long findThreadId = findThread.getId();
@@ -310,10 +333,10 @@ public class ThreadService {
         }
 
         findThread.changeStatus(ThreadStatus.대기.name());
+        findThread.addContributor(contributor);
 
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread(Update) on the waiting list.");
     }
-
 
     public CommonResponse<ThreadListResDto> getThreadListByTagId(Long tagId, HttpServletRequest request) {
         String accessToken = jwtTokenProvider.resolveToken(request);
@@ -377,6 +400,16 @@ public class ThreadService {
             res.setIsFeatured(t.getIsFeatured());
 
             resDtoList.add(res);
+
+            List<ThreadContributor> contributors = threadContributorRepository.findAllByThreadId(t.getId());
+            List<String> contributorList = new ArrayList<>();
+            contributors.forEach(c -> {
+                Profile profile = profileRepository.findByUserId(c.getContributorUserId());
+                if (profile != null) {
+                    contributorList.add(profile.getNickname());
+                }
+            });
+            res.setContributorList(contributorList);
         }
         ThreadListResDto res = new ThreadListResDto();
         res.setCount(resDtoList.size());
@@ -463,13 +496,19 @@ public class ThreadService {
         jwtTokenProvider.validateAccessToken(accessToken);
         String email = jwtTokenProvider.getUserPk(accessToken);
         User user = userRepository.findByEmail(email);
+        if (user == null) {
+            return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "User Not Found.");
+        }
 
         Thread findThread = threadRepository.findByIdAndStatus(threadLikeReqDto.getThreadId(), ThreadStatus.승인.name());
         if (findThread == null) {
             return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "Thread Not Found.");
         }
 
-        // todo user validation null
+        ThreadLike findThreadLike = threadLikeRepository.findByUserIdAndThreadId(user.getId(), findThread.getId());
+        if (findThreadLike != null) {
+            return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread Already Liked.");
+        }
 
         ThreadLike threadLike = ThreadLike.builder()
                 .threadId(threadLikeReqDto.getThreadId())
@@ -480,6 +519,34 @@ public class ThreadService {
         findThread.addLikeCount();
 
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread Liked.");
+    }
+
+    public <T> CommonResponse<T> cancelLikeThread(ThreadLikeReqDto threadLikeReqDto, HttpServletRequest request) {
+        String accessToken = jwtTokenProvider.resolveToken(request);
+        jwtTokenProvider.validateAccessToken(accessToken);
+        String email = jwtTokenProvider.getUserPk(accessToken);
+        User user = userRepository.findByEmail(email);
+        if (user == null) {
+            return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "User Not Found.");
+        }
+
+        Thread findThread = threadRepository.findByIdAndStatus(threadLikeReqDto.getThreadId(), ThreadStatus.승인.name());
+        if (findThread == null) {
+            return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "Thread Not Found.");
+        }
+
+        ThreadLike findThreadLike = threadLikeRepository.findByUserIdAndThreadId(user.getId(), findThread.getId());
+        if (findThreadLike == null) {
+            return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "Thread Like Already Deleted.");
+        }
+
+        ThreadLike threadLike = threadLikeRepository.findByUserIdAndThreadId(user.getId(), findThread.getId());
+        if (threadLike != null) {
+            threadLikeRepository.delete(threadLike);
+        }
+        findThread.subtractLikeCount();
+
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread Like Cancelled.");
     }
 
     public CommonResponse<ThreadPagingResDto> getSearchList(String keyword, Integer page) {
@@ -507,7 +574,7 @@ public class ThreadService {
         List<Thread> threadList = threadRepository.findAllByThreadTitleOrContentsInOrderByModifiedDateDesc(PageRequest.of(page - 1, 10), search, contentList);
 
         ThreadPagingResDto resDto = new ThreadPagingResDto();
-        resDto.setCount(threadRepository.countAllByStatus(ThreadStatus.승인.name()));
+        resDto.setTotal(threadRepository.countAllByStatus(ThreadStatus.승인.name()));
         List<ThreadResDto> threadResList = new ArrayList<>();
         for (Thread t : threadList) {
             ThreadResDto res = new ThreadResDto();
@@ -557,13 +624,30 @@ public class ThreadService {
             res.setReferences(referenceList);
             res.setDate(t.getCreatedDate());
             res.setIsFeatured(t.getIsFeatured());
+            List<ThreadContributor> contributors = threadContributorRepository.findAllByThreadId(t.getId());
+            List<String> contributorList = new ArrayList<>();
+            contributors.forEach(c -> {
+                Profile profile = profileRepository.findByUserId(c.getContributorUserId());
+                if (profile != null) {
+                    contributorList.add(profile.getNickname());
+                }
+            });
+            res.setContributorList(contributorList);
 
             threadResList.add(res);
         }
-        resDto.setCount(threadRepository.countAllByThreadTitleOrContentsIn(search, contentList));
         resDto.setThreads(threadResList);
-        // todo refactoring if
-        resDto.setNextPage(page + 1);
+        int total = threadRepository.countAllByThreadTitleOrContentsIn(search, contentList);
+        resDto.setTotal(total);
+        if (!threadResList.isEmpty()) {
+            if ((page) * 10 > total) {
+                resDto.setNextPage(null);
+            } else {
+                resDto.setNextPage(page + 1);
+            }
+        } else {
+            resDto.setNextPage(null);
+        }
 
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Keyword Search List.", resDto);
     }
@@ -578,14 +662,13 @@ public class ThreadService {
         List<Category> distinctCategories = categories.stream().distinct().collect(Collectors.toList());
 
         if (page == null) {
-            page = 0;
+            page = 1;
         }
 
         // 최근 편집 순서
         List<Thread> threadList = threadRepository.findAllByTagsInOrCategoriesIn(PageRequest.of(page - 1, 10, Sort.by("modifiedDate").descending()), distinctTags, distinctCategories);
 
         ThreadPagingResDto resDto = new ThreadPagingResDto();
-        resDto.setCount(threadRepository.countAllByTagsInAndStatus(distinctTags, ThreadStatus.승인.name()));
         List<ThreadResDto> threadResList = new ArrayList<>();
         for (Thread t : threadList) {
             ThreadResDto res = new ThreadResDto();
@@ -635,14 +718,220 @@ public class ThreadService {
             res.setReferences(referenceList);
             res.setDate(t.getCreatedDate());
             res.setIsFeatured(t.getIsFeatured());
+            List<ThreadContributor> contributors = threadContributorRepository.findAllByThreadId(t.getId());
+            List<String> contributorList = new ArrayList<>();
+            contributors.forEach(c -> {
+                Profile profile = profileRepository.findByUserId(c.getContributorUserId());
+                if (profile != null) {
+                    contributorList.add(profile.getNickname());
+                }
+            });
+            res.setContributorList(contributorList);
 
             threadResList.add(res);
         }
-        resDto.setCount(threadRepository.countAllByTagsInOrCategoriesIn(tags, categories));
         resDto.setThreads(threadResList);
-        // todo refactoring if
-        resDto.setNextPage(page + 1);
+        int total = threadRepository.countAllByTagsInOrCategoriesIn(tags, categories);
+        resDto.setTotal(total);
+        if (!threadResList.isEmpty()) {
+            if ((page) * 10 > total) {
+                resDto.setNextPage(null);
+            } else {
+                resDto.setNextPage(page + 1);
+            }
+        } else {
+            resDto.setNextPage(null);
+        }
 
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Tag Search List.", resDto);
+    }
+
+    public CommonResponse<ThreadPagingResDto> getCollectionList(String type, Integer page) {
+        if (page == null) {
+            page = 1;
+        }
+
+        if (type == null) {
+            type = ThreadType.THREAD.getType();
+        }
+
+        // todo 추후 질문/토론 시 분기 필요
+//        if(type.equals())
+
+        List<Thread> threadList = threadRepository.findAllByStatusOrderByModifiedDateDesc(PageRequest.of(page - 1, 10, Sort.by("modifiedDate").descending()), ThreadStatus.승인.name());
+
+        ThreadPagingResDto resDto = new ThreadPagingResDto();
+        List<ThreadResDto> threadResList = new ArrayList<>();
+        for (Thread t : threadList) {
+            ThreadResDto res = new ThreadResDto();
+            res.setId(t.getId());
+            res.setTitle(t.getThreadTitle());
+            res.setSubTitle(t.getThreadSubTitle());
+            res.setThumbnailUrl(t.getThumbnailUrl() == null ? "https://knit-document.s3.ap-northeast-2.amazonaws.com/thread/cover/cover1.png" : t.getThumbnailUrl());
+            List<ContentResDto> contentList = new ArrayList<>();
+            List<Content> contents = contentRepository.findAllByThreadIdOrderBySequence(t.getId());
+            contents.forEach(c -> {
+                ContentResDto contentRes = new ContentResDto();
+                contentRes.setContentId(c.getId());
+                contentRes.setType(c.getContentType());
+                contentRes.setValue(c.getValue());
+                contentRes.setSummary(c.getSummary());
+
+                contentList.add(contentRes);
+            });
+            res.setContents(contentList);
+            List<CategoryResDto> categoryList = new ArrayList<>();
+            t.getCategories().forEach(c -> {
+                CategoryResDto categoryRes = new CategoryResDto();
+                categoryRes.setCategoryId(c.getId());
+                categoryRes.setValue(c.getCategory());
+
+                categoryList.add(categoryRes);
+            });
+            res.setCategories(categoryList);
+            List<TagResDto> tagResList = new ArrayList<>();
+            t.getTags().forEach(tr -> {
+                TagResDto tagRes = new TagResDto();
+                tagRes.setTagId(tr.getId());
+                tagRes.setValue(tr.getTagName());
+
+                tagResList.add(tagRes);
+            });
+            res.setTags(tagResList);
+            List<ReferenceResDto> referenceList = new ArrayList<>();
+            t.getReferences().forEach(r -> {
+                ReferenceResDto referenceRes = new ReferenceResDto();
+                referenceRes.setReferenceId(r.getId());
+                referenceRes.setReferenceLink(r.getReferenceLink());
+                referenceRes.setReferenceDescription(r.getReferenceDescription());
+
+                referenceList.add(referenceRes);
+            });
+            res.setReferences(referenceList);
+            res.setDate(t.getCreatedDate());
+            res.setIsFeatured(t.getIsFeatured());
+            List<ThreadContributor> contributors = threadContributorRepository.findAllByThreadId(t.getId());
+            List<String> contributorList = new ArrayList<>();
+            contributors.forEach(c -> {
+                Profile profile = profileRepository.findByUserId(c.getContributorUserId());
+                if (profile != null) {
+                    contributorList.add(profile.getNickname());
+                }
+            });
+            res.setContributorList(contributorList);
+
+            threadResList.add(res);
+        }
+        resDto.setThreads(threadResList);
+
+        int total = threadRepository.countAllByStatus(ThreadStatus.승인.name());
+        resDto.setTotal(total);
+        if (!threadResList.isEmpty()) {
+            if ((page) * 10 > total) {
+                resDto.setNextPage(null);
+            } else {
+                resDto.setNextPage(page + 1);
+            }
+        } else {
+            resDto.setNextPage(null);
+        }
+
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread Collection List.", resDto);
+    }
+
+    public CommonResponse<ThreadPagingResDto> getGroupList(String category, String type, Integer page) {
+        if (page == null) {
+            page = 1;
+        }
+        if (category == null) {
+            category = CategoryType.PLANNING.getGroupEn();
+        }
+        if (type == null) {
+            type = ThreadType.THREAD.getType();
+        }
+
+        ThreadPagingResDto resDto = new ThreadPagingResDto();
+        // todo 추후 질문/토론 시 분기 필요
+        if (type.equals(ThreadType.THREAD.getType())) {
+            List<Category> categories = categoryRepository.findAllByCategory(CategoryType.valueOf(category.toUpperCase()).getGroupEn());
+            List<Thread> threadList = threadRepository.findAllByStatusAndCategoriesInOrderByModifiedDateDesc(PageRequest.of(page - 1, 10, Sort.by("modifiedDate").descending()), ThreadStatus.승인.name(), categories);
+
+            List<ThreadResDto> threadResList = new ArrayList<>();
+            for (Thread t : threadList) {
+                ThreadResDto res = new ThreadResDto();
+                res.setId(t.getId());
+                res.setTitle(t.getThreadTitle());
+                res.setSubTitle(t.getThreadSubTitle());
+                res.setThumbnailUrl(t.getThumbnailUrl() == null ? "https://knit-document.s3.ap-northeast-2.amazonaws.com/thread/cover/cover1.png" : t.getThumbnailUrl());
+                List<ContentResDto> contentList = new ArrayList<>();
+                List<Content> contents = contentRepository.findAllByThreadIdOrderBySequence(t.getId());
+                contents.forEach(c -> {
+                    ContentResDto contentRes = new ContentResDto();
+                    contentRes.setContentId(c.getId());
+                    contentRes.setType(c.getContentType());
+                    contentRes.setValue(c.getValue());
+                    contentRes.setSummary(c.getSummary());
+
+                    contentList.add(contentRes);
+                });
+                res.setContents(contentList);
+                List<CategoryResDto> categoryList = new ArrayList<>();
+                t.getCategories().forEach(c -> {
+                    CategoryResDto categoryRes = new CategoryResDto();
+                    categoryRes.setCategoryId(c.getId());
+                    categoryRes.setValue(c.getCategory());
+
+                    categoryList.add(categoryRes);
+                });
+                res.setCategories(categoryList);
+                List<TagResDto> tagResList = new ArrayList<>();
+                t.getTags().forEach(tr -> {
+                    TagResDto tagRes = new TagResDto();
+                    tagRes.setTagId(tr.getId());
+                    tagRes.setValue(tr.getTagName());
+
+                    tagResList.add(tagRes);
+                });
+                res.setTags(tagResList);
+                List<ReferenceResDto> referenceList = new ArrayList<>();
+                t.getReferences().forEach(r -> {
+                    ReferenceResDto referenceRes = new ReferenceResDto();
+                    referenceRes.setReferenceId(r.getId());
+                    referenceRes.setReferenceLink(r.getReferenceLink());
+                    referenceRes.setReferenceDescription(r.getReferenceDescription());
+
+                    referenceList.add(referenceRes);
+                });
+                res.setReferences(referenceList);
+                res.setDate(t.getCreatedDate());
+                res.setIsFeatured(t.getIsFeatured());
+                List<ThreadContributor> contributors = threadContributorRepository.findAllByThreadId(t.getId());
+                List<String> contributorList = new ArrayList<>();
+                contributors.forEach(c -> {
+                    Profile profile = profileRepository.findByUserId(c.getContributorUserId());
+                    if (profile != null) {
+                        contributorList.add(profile.getNickname());
+                    }
+                });
+                res.setContributorList(contributorList);
+
+                threadResList.add(res);
+            }
+            resDto.setThreads(threadResList);
+
+            int total = threadRepository.countAllByStatus(ThreadStatus.승인.name());
+            resDto.setTotal(total);
+            if (!threadResList.isEmpty()) {
+                if ((page) * 10 > total) {
+                    resDto.setNextPage(null);
+                } else {
+                    resDto.setNextPage(page + 1);
+                }
+            } else {
+                resDto.setNextPage(null);
+            }
+        }
+
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread Per Category/Type List.", resDto);
     }
 }

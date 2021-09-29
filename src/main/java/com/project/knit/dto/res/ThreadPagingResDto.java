@@ -10,7 +10,7 @@ import java.util.List;
 @Getter
 @NoArgsConstructor
 public class ThreadPagingResDto {
-    private Integer count;
+    private Integer total;
     private Integer nextPage;
     private List<ThreadResDto> threads;
 }

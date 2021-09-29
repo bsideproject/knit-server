@@ -1,6 +1,8 @@
 package com.project.knit.config.jwt;
 
+import com.project.knit.domain.entity.ExpiredToken;
 import com.project.knit.domain.entity.User;
+import com.project.knit.domain.repository.ExpiredTokenRepository;
 import com.project.knit.domain.repository.UserRepository;
 import com.project.knit.service.CustomUserDetailService;
 import io.jsonwebtoken.Claims;
@@ -41,10 +43,11 @@ public class JwtTokenProvider {
     // refreshToken 유효시간 7일
 //    private long refreshTokenValidTime = 7 * 24 * 60 * 60 * 1000L;
     // test 시간
-    private long refreshTokenValidTime = 15 * 60 * 1000L;
+    private long refreshTokenValidTime = 24 * 60 * 60 * 1000L;
 
     private final CustomUserDetailService customUserDetailService;
     private final UserRepository userRepository;
+    private final ExpiredTokenRepository expiredTokenRepository;
 
     // 객체 초기화, secretKey를 Base64로 인코딩
     @PostConstruct
@@ -110,10 +113,32 @@ public class JwtTokenProvider {
         return null;
     }
 
+//    public boolean validateAccessToken(String accessToken) {
+//        try {
+//            String userEmail = getUserPk(accessToken);
+//            log.info("[TEMP]userEmail : {}", userEmail);
+//            User user = userRepository.findByEmail(userEmail);
+//            if (user == null) {
+//                throw new IllegalArgumentException("사용자 정보가 일치하지 않습니다.");
+//            }
+//
+//            Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(accessToken);
+//            return !claims.getBody().getExpiration().before(new Date());
+//        } catch (Exception e) {
+//            log.info("validate token error : {}, {}", e.getCause(), e.getMessage());
+//            return false;
+//        }
+//    }
+
     public boolean validateAccessToken(String accessToken) {
         try {
+            List<ExpiredToken> expiredTokenList = expiredTokenRepository.findAllByAccessToken(accessToken);
+            if (expiredTokenList != null && !expiredTokenList.isEmpty()) {
+                throw new IllegalArgumentException("Invalid Token.");
+            }
+
             String userEmail = getUserPk(accessToken);
-            log.info("[TEMP]userEmail : {}", userEmail);
+            log.info("[TEMP] userEmail : {}", userEmail);
             User user = userRepository.findByEmail(userEmail);
             if (user == null) {
                 throw new IllegalArgumentException("사용자 정보가 일치하지 않습니다.");
@@ -121,8 +146,17 @@ public class JwtTokenProvider {
 
             Jws<Claims> claims = Jwts.parser().setSigningKey(secretKey).parseClaimsJws(accessToken);
             return !claims.getBody().getExpiration().before(new Date());
-        } catch (Exception e) {
-            log.info("validate token error : {}, {}", e.getCause(), e.getMessage());
+        } catch (SecurityException | MalformedJwtException e) {
+            log.info("잘못된 JWT 서명입니다.");
+            return false;
+        } catch (ExpiredJwtException e) {
+            log.info("만료된 JWT 토큰입니다.");
+            return false;
+        } catch (UnsupportedJwtException e) {
+            log.info("지원되지 않는 JWT 토큰입니다.");
+            return false;
+        } catch (IllegalArgumentException e) {
+            log.info("JWT 토큰이 잘못되었습니다.");
             return false;
         }
     }

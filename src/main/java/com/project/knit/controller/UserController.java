@@ -4,6 +4,7 @@ import com.project.knit.dto.req.ProfileUpdateReqDto;
 import com.project.knit.dto.res.CommonResponse;
 import com.project.knit.dto.res.LoginResDto;
 import com.project.knit.dto.res.ProfileResDto;
+import com.project.knit.dto.res.ThreadContributeResDto;
 import com.project.knit.dto.res.ThreadListResDto;
 import com.project.knit.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
+import java.util.List;
 
 @Slf4j
 @Validated
@@ -35,7 +37,17 @@ public class UserController {
         return new ResponseEntity<>(userService.login(request, type), HttpStatus.OK);
     }
 
+    @PostMapping("/refresh/token")
+    public ResponseEntity<CommonResponse<LoginResDto>> refreshToken(HttpServletRequest request) {
+        CommonResponse<LoginResDto> response = userService.refreshToken(request);
+        return new ResponseEntity<>(response, HttpStatus.valueOf(response.getStatus()));
+    }
+
     // logout
+    @PostMapping("/logout")
+    public ResponseEntity<CommonResponse> logout(HttpServletRequest request) {
+        return new ResponseEntity<>(userService.logout(request), HttpStatus.OK);
+    }
 
     // getProfileInfo
     @GetMapping("/profile")
@@ -53,5 +65,11 @@ public class UserController {
     @PostMapping("/profile")
     public ResponseEntity<CommonResponse<ProfileResDto>> updateProfile(HttpServletRequest request, ProfileUpdateReqDto profileUpdateReqDto) {
         return new ResponseEntity<>(userService.updateProfile(request, profileUpdateReqDto), HttpStatus.OK);
+    }
+
+    // 기여 history
+    @GetMapping("/contribute/history")
+    public ResponseEntity<CommonResponse<List<ThreadContributeResDto>>> getUserContributeHistoryList(HttpServletRequest request) {
+        return new ResponseEntity<>(userService.getUserContributeHistoryList(request), HttpStatus.OK);
     }
 }

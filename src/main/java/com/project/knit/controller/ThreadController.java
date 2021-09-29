@@ -3,7 +3,13 @@ package com.project.knit.controller;
 import com.project.knit.dto.req.ThreadCreateReqDto;
 import com.project.knit.dto.req.ThreadLikeReqDto;
 import com.project.knit.dto.req.ThreadUpdateReqDto;
-import com.project.knit.dto.res.*;
+import com.project.knit.dto.res.CategoryResDto;
+import com.project.knit.dto.res.CommonResponse;
+import com.project.knit.dto.res.S3ImageResDto;
+import com.project.knit.dto.res.TagResDto;
+import com.project.knit.dto.res.ThreadListResDto;
+import com.project.knit.dto.res.ThreadResDto;
+import com.project.knit.dto.res.ThreadShortListResDto;
 import com.project.knit.service.S3Service;
 import com.project.knit.service.ThreadService;
 import lombok.RequiredArgsConstructor;
@@ -11,7 +17,13 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
@@ -30,8 +42,8 @@ public class ThreadController {
     private final S3Service s3Service;
 
     @GetMapping("/v1/threads/list")
-    public ResponseEntity<CommonResponse<ThreadShortListResDto>> getThreadInfoList(HttpServletRequest request) {
-        return new ResponseEntity<>(threadService.getThreadInfoList(request), HttpStatus.OK);
+    public ResponseEntity<CommonResponse<ThreadShortListResDto>> getThreadInfoList() {
+        return new ResponseEntity<>(threadService.getThreadInfoList(), HttpStatus.OK);
     }
 
     @GetMapping("/thread/{threadId}")
@@ -79,5 +91,8 @@ public class ThreadController {
         return new ResponseEntity<>(threadService.likeThread(threadLikeReqDto, request), HttpStatus.OK);
     }
 
-    // todo cancel like
+    @PostMapping("/v1/threads/like/cancel")
+    public ResponseEntity<CommonResponse> cancelLikeThread(@Valid @RequestBody ThreadLikeReqDto threadLikeReqDto, HttpServletRequest request) {
+        return new ResponseEntity<>(threadService.cancelLikeThread(threadLikeReqDto, request), HttpStatus.OK);
+    }
 }

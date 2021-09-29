@@ -13,24 +13,25 @@ import javax.persistence.Id;
 import javax.persistence.Table;
 
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "thread_category")
 @Getter
+@Table(name = "expired_token")
 @Entity
-public class ThreadCategory extends TimeEntity {
-    @Column(name = "thread_category_id")
-    @Id
+public class ExpiredToken extends TimeEntity {
+
+    @Column(name = "expired_token_id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Id
     private Long id;
 
-    @Column(name = "thread_id")
-    private Long threadId;
+    @Column(name = "access_token", columnDefinition = "LONGTEXT")
+    private String accessToken;
 
-    @Column(name = "category_id")
-    private Long categoryId;
+    @Column(name = "refresh_token", columnDefinition = "LONGTEXT")
+    private String refreshToken;
 
     @Builder
-    public ThreadCategory(Long threadId, Long categoryId) {
-        this.threadId = threadId;
-        this.categoryId = categoryId;
+    public ExpiredToken(String accessToken, String refreshToken) {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
     }
 }

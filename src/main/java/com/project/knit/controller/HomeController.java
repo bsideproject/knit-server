@@ -1,6 +1,10 @@
 package com.project.knit.controller;
 
-import com.project.knit.dto.res.*;
+import com.project.knit.dto.res.CommonResponse;
+import com.project.knit.dto.res.ThreadFeaturedResDto;
+import com.project.knit.dto.res.ThreadMostViewedListResDto;
+import com.project.knit.dto.res.ThreadPagingResDto;
+import com.project.knit.dto.res.ThreadRecentChangedResDto;
 import com.project.knit.service.S3Service;
 import com.project.knit.service.ThreadService;
 import lombok.RequiredArgsConstructor;
@@ -9,10 +13,13 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
 import java.util.List;
 
 @Slf4j
@@ -45,13 +52,19 @@ public class HomeController {
 
     // search
     @GetMapping("/search")
-    public ResponseEntity<CommonResponse<ThreadPagingResDto>> getKeywordSearchList(@RequestParam String search, @RequestParam Integer page) {
+    public ResponseEntity<CommonResponse<ThreadPagingResDto>> getKeywordSearchList(@RequestParam String search, @RequestParam(defaultValue = "0") Integer page) {
         return new ResponseEntity<>(threadService.getSearchList(search, page), HttpStatus.OK);
     }
 
-//    // search by tag
-//    @GetMapping("/search/tag/{tag}/{page}")
-//    public ResponseEntity<CommonResponse<ThreadPagingResDto>> getTagSearchList(@PathVariable String tag, @PathVariable Integer page) {
-//        return new ResponseEntity<>(threadService.getTagSearchList(tag, page), HttpStatus.OK);
-//    }
+    // 모아보기
+    @GetMapping("/collection/{type}")
+    public ResponseEntity<CommonResponse<ThreadPagingResDto>> getCollectionList(@PathVariable @Valid @NotBlank(message = "Type should not be null or empty.") String type, @RequestParam(defaultValue = "0") Integer page) {
+        return new ResponseEntity<>(threadService.getCollectionList(type, page), HttpStatus.OK);
+    }
+
+    // 직군-문서
+    @GetMapping("/{category}/{type}")
+    public ResponseEntity<CommonResponse<ThreadPagingResDto>> getGroupList(@PathVariable @Valid @NotBlank(message = "Category should not be null or empty.") String category, @PathVariable @Valid @NotBlank(message = "Type should not be null or empty.") String type, @RequestParam(defaultValue = "0") Integer page) {
+        return new ResponseEntity<>(threadService.getGroupList(category, type, page), HttpStatus.OK);
+    }
 }

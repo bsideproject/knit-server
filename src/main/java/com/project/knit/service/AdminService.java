@@ -1,12 +1,26 @@
 package com.project.knit.service;
 
+import com.project.knit.domain.entity.Category;
+import com.project.knit.domain.entity.Content;
+import com.project.knit.domain.entity.Profile;
+import com.project.knit.domain.entity.Reference;
+import com.project.knit.domain.entity.Tag;
 import com.project.knit.domain.entity.Thread;
-import com.project.knit.domain.entity.*;
+import com.project.knit.domain.entity.ThreadCategory;
+import com.project.knit.domain.entity.ThreadContributor;
+import com.project.knit.domain.entity.ThreadTag;
 import com.project.knit.domain.repository.*;
 import com.project.knit.dto.req.ThreadDeclineReqDto;
-import com.project.knit.dto.res.*;
+import com.project.knit.dto.res.CategoryResDto;
+import com.project.knit.dto.res.CommonResponse;
+import com.project.knit.dto.res.ContentResDto;
+import com.project.knit.dto.res.ReferenceResDto;
+import com.project.knit.dto.res.TagResDto;
+import com.project.knit.dto.res.ThreadAdminResDto;
+import com.project.knit.dto.res.ThreadResDto;
 import com.project.knit.utils.enums.StatusCodeEnum;
 import com.project.knit.utils.enums.ThreadStatus;
+import com.project.knit.utils.enums.ThreadType;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -26,7 +40,8 @@ public class AdminService {
     private final TagRepository tagRepository;
     private final CategoryRepository categoryRepository;
     private final ReferenceRepository referenceRepository;
-
+    private final ThreadContributorRepository threadContributorRepository;
+    private final ProfileRepository profileRepository;
 
     public <T> CommonResponse<T> registerToFeature(Long threadId) {
         Thread thread = threadRepository.findById(threadId).orElseThrow(() -> new NullPointerException("Thread Info Not Found."));
@@ -64,6 +79,14 @@ public class AdminService {
 
             threadTagRepository.save(threadTag);
         });
+
+        ThreadContributor threadContributor = ThreadContributor.builder()
+                .contributorUserId(thread.getUser().getId())
+                .threadType(ThreadType.THREAD.getType())
+                .threadId(threadId)
+                .threadTitle(thread.getThreadTitle())
+                .build();
+        threadContributorRepository.save(threadContributor);
 
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "[ADMIN] Thread Successfully Created.");
     }
@@ -257,6 +280,15 @@ public class AdminService {
         resDto.setThumbnailUrl(thread.getThumbnailUrl());
         resDto.setDate(thread.getCreatedDate());
         resDto.setIsFeatured(thread.getIsFeatured());
+        List<ThreadContributor> contributors = threadContributorRepository.findAllByThreadId(threadId);
+        List<String> contributorList = new ArrayList<>();
+        contributors.forEach(c -> {
+            Profile profile = profileRepository.findByUserId(c.getContributorUserId());
+            if (profile != null) {
+                contributorList.add(profile.getNickname());
+            }
+        });
+        resDto.setContributorList(contributorList);
 
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread Found.", resDto);
     }

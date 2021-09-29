@@ -2,14 +2,19 @@ package com.project.knit.service;
 
 import com.project.knit.config.jwt.JwtTokenProvider;
 import com.project.knit.domain.entity.Content;
+import com.project.knit.domain.entity.ExpiredToken;
 import com.project.knit.domain.entity.Profile;
 import com.project.knit.domain.entity.Thread;
+import com.project.knit.domain.entity.ThreadContributor;
 import com.project.knit.domain.entity.User;
+import com.project.knit.domain.entity.UserToken;
 import com.project.knit.domain.repository.ContentRepository;
+import com.project.knit.domain.repository.ExpiredTokenRepository;
 import com.project.knit.domain.repository.ProfileRepository;
+import com.project.knit.domain.repository.ThreadContributorRepository;
 import com.project.knit.domain.repository.ThreadRepository;
 import com.project.knit.domain.repository.UserRepository;
-import com.project.knit.dto.req.LoginReqDto;
+import com.project.knit.domain.repository.UserTokenRepository;
 import com.project.knit.dto.req.ProfileUpdateReqDto;
 import com.project.knit.dto.res.*;
 import com.project.knit.service.social.SocialOauth;
@@ -28,14 +33,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.PBEKeySpec;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -52,6 +52,9 @@ public class UserService {
     private final ThreadRepository threadRepository;
     private final ContentRepository contentRepository;
     private final JwtTokenProvider jwtTokenProvider;
+    private final ThreadContributorRepository threadContributorRepository;
+    private final ExpiredTokenRepository expiredTokenRepository;
+    private final UserTokenRepository userTokenRepository;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -121,6 +124,10 @@ public class UserService {
             createdUser.addRefreshToken(refreshToken);
             resDto.setAccessToken(accessToken);
             resDto.setRefreshToken(refreshToken);
+
+            UserToken userToken = UserToken.builder().userId(user.getId()).refreshToken(refreshToken).build();
+            userTokenRepository.save(userToken);
+            userRepository.save(createdUser);
         } else {
             if (email.equals(findUser.getEmail())) {
                 accessToken = jwtTokenProvider.createAccessToken(findUser.getEmail(), Collections.singletonList(findUser.getRole()));
@@ -129,10 +136,41 @@ public class UserService {
 
                 resDto.setAccessToken(accessToken);
                 resDto.setRefreshToken(refreshToken);
+
+                UserToken userToken = UserToken.builder().userId(findUser.getId()).refreshToken(refreshToken).build();
+                userTokenRepository.save(userToken);
+                userRepository.save(findUser);
             }
         }
 
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "로그인 성공", resDto);
+    }
+
+    @Transactional
+    public <T> CommonResponse<T> logout(HttpServletRequest request) {
+        String accessToken = jwtTokenProvider.resolveToken(request);
+        jwtTokenProvider.validateAccessToken(accessToken);
+        String email = jwtTokenProvider.getUserPk(accessToken);
+        var user = userRepository.findByEmail(email);
+
+        if (user == null) {
+            return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "User Not Found.");
+        }
+
+        List<UserToken> userTokenList = userTokenRepository.findAllByUserId(user.getId());
+        if (!userTokenList.isEmpty()) {
+            userTokenList.forEach(ut -> {
+                var expiredToken = ExpiredToken.builder()
+                        .accessToken(jwtTokenProvider.resolveToken(request))
+                        .refreshToken(ut.getRefreshToken())
+                        .build();
+
+                expiredTokenRepository.save(expiredToken);
+            });
+        }
+        userTokenRepository.deleteAll(userTokenList);
+
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "로그아웃 성공");
     }
 
     private String getGoogleUserProfile(String token) {
@@ -161,14 +199,19 @@ public class UserService {
     }
 
     public CommonResponse<LoginResDto> refreshToken(HttpServletRequest request) {
-        String accessToken = request.getHeader("Access");
         String refreshToken = request.getHeader("Refresh");
+        var expiredTokenList = expiredTokenRepository.findAllByRefreshToken(refreshToken);
 
-        jwtTokenProvider.validateRefreshToken(refreshToken);
+        if (!jwtTokenProvider.validateRefreshToken(refreshToken) || !expiredTokenList.isEmpty()) {
+            throw new IllegalArgumentException("Refresh Token Expired. You need to re-login.");
+        }
 
-        String userEmailFromAccessToken = jwtTokenProvider.getUserPk(accessToken);
-        User user = userRepository.findByEmail(userEmailFromAccessToken);
+        List<UserToken> userTokenList = userTokenRepository.findAllByRefreshToken(refreshToken);
+        if (userTokenList == null || userTokenList.isEmpty()) {
+            return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "사용자가 존재하지 않습니다.");
+        }
 
+        User user = userRepository.findById(userTokenList.get(0).getUserId()).orElse(null);
         if (user == null) {
             return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "사용자가 존재하지 않습니다.");
         }
@@ -192,7 +235,15 @@ public class UserService {
         String email = jwtTokenProvider.getUserPk(accessToken);
         User user = userRepository.findByEmail(email);
 
+        if (user == null) {
+            return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "User Not Found.");
+        }
+
         Profile profile = profileRepository.findByUser(user);
+
+        if (profile == null) {
+            return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "Profile Not Found.");
+        }
 
         ProfileResDto resDto = new ProfileResDto();
         resDto.setEmail(user.getEmail());
@@ -200,6 +251,23 @@ public class UserService {
         resDto.setGithub(profile.getGithub() == null ? null : profile.getGithub());
         resDto.setLinkedIn(profile.getLinkedIn() == null ? null : profile.getLinkedIn());
         resDto.setIntroduction(profile.getIntroduction() == null ? null : profile.getIntroduction());
+
+        Long userId = user.getId();
+        List<ThreadContributor> contributeList = threadContributorRepository.findAllByContributorUserId(user.getId());
+        List<ThreadContributeResDto> contributeResDtoList = new ArrayList<>();
+        contributeList.forEach(c -> {
+            ThreadContributeResDto contributeResDto = new ThreadContributeResDto();
+            contributeResDto.setContributorUserId(userId);
+            contributeResDto.setYear(String.valueOf(c.getCreatedDate().getYear()));
+            contributeResDto.setMonth(String.valueOf(c.getCreatedDate().getMonth()));
+            contributeResDto.setCreatedDate(c.getCreatedDate());
+            contributeResDto.setThreadId(c.getThreadId());
+            contributeResDto.setType(c.getThreadType());
+            contributeResDto.setThreadTitle(c.getThreadTitle());
+
+            contributeResDtoList.add(contributeResDto);
+        });
+        resDto.setContributeHistoryList(contributeResDtoList);
 
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Profile Info Found", resDto);
     }
@@ -211,7 +279,15 @@ public class UserService {
         String email = jwtTokenProvider.getUserPk(accessToken);
         User user = userRepository.findByEmail(email);
 
+        if (user == null) {
+            return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "User Not Found.");
+        }
+
         Profile profile = profileRepository.findByUser(user);
+        if (profile == null) {
+            return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "Profile Not Found.");
+        }
+
         profile.updateProfile(
                 profileUpdateReqDto.getNickname() == null ? profile.getNickname() : profileUpdateReqDto.getNickname(),
                 profileUpdateReqDto.getGithub() == null ? profile.getGithub() : profileUpdateReqDto.getGithub(),
@@ -234,6 +310,10 @@ public class UserService {
         jwtTokenProvider.validateAccessToken(accessToken);
         String email = jwtTokenProvider.getUserPk(accessToken);
         User user = userRepository.findByEmail(email);
+
+        if (user == null) {
+            return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "User Not Found.");
+        }
 
         List<Thread> threadList = threadRepository.findAllByUserAndStatusOrderByCreatedDateDesc(user, ThreadStatus.대기.name());
         List<ThreadResDto> resDtoList = new ArrayList<>();
@@ -285,33 +365,53 @@ public class UserService {
             res.setReferences(referenceList);
             res.setDate(t.getCreatedDate());
             res.setIsFeatured(t.getIsFeatured());
+            List<ThreadContributor> contributors = threadContributorRepository.findAllByThreadId(t.getId());
+            List<String> contributorList = new ArrayList<>();
+            contributors.forEach(c -> {
+                Profile profile = profileRepository.findByUserId(c.getContributorUserId());
+                if (profile != null) {
+                    contributorList.add(profile.getNickname());
+                }
+            });
+            res.setContributorList(contributorList);
 
             resDtoList.add(res);
         });
-
 
         ThreadListResDto resDto = new ThreadListResDto();
         resDto.setCount(resDtoList.size());
         resDto.setThreads(resDtoList);
 
-        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "User 등재 전 대기문서 조회", resDto);
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "User 등재 전 대기문서 조회공 성공", resDto);
     }
 
-    // todo logout : token 삭제
+    public CommonResponse<List<ThreadContributeResDto>> getUserContributeHistoryList(HttpServletRequest request) {
+        String accessToken = jwtTokenProvider.resolveToken(request);
+        jwtTokenProvider.validateAccessToken(accessToken);
+        String email = jwtTokenProvider.getUserPk(accessToken);
+        User user = userRepository.findByEmail(email);
 
-    private String createEncodedPassword(String email, String password) {
-        StringBuilder encodedPassword = new StringBuilder();
-        try {
-            PBEKeySpec spec = new PBEKeySpec(password.toCharArray(), email.getBytes(StandardCharsets.UTF_8), 1024, 64 * 8);
-            SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
-
-            byte[] bytes = keyFactory.generateSecret(spec).getEncoded();
-            for (final byte b : bytes) {
-                encodedPassword.append(String.format("%02x", b & 0xff));
-            }
-        } catch (NoSuchAlgorithmException | InvalidKeySpecException e) {
-            e.printStackTrace();
+        if (user == null) {
+            return CommonResponse.response(StatusCodeEnum.NOT_FOUND.getStatus(), "User Not Found.");
         }
-        return encodedPassword.toString();
+
+        Long userId = user.getId();
+
+        List<ThreadContributor> contributeList = threadContributorRepository.findAllByContributorUserId(user.getId());
+        List<ThreadContributeResDto> resDtoList = new ArrayList<>();
+        contributeList.forEach(c -> {
+            ThreadContributeResDto resDto = new ThreadContributeResDto();
+            resDto.setContributorUserId(userId);
+            resDto.setYear(String.valueOf(c.getCreatedDate().getYear()));
+            resDto.setMonth(String.valueOf(c.getCreatedDate().getMonth()));
+            resDto.setCreatedDate(c.getCreatedDate());
+            resDto.setThreadId(c.getThreadId());
+            resDto.setType(c.getThreadType());
+            resDto.setThreadTitle(c.getThreadTitle());
+
+            resDtoList.add(resDto);
+        });
+
+        return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "User 기여 히스토리 조회 성공", resDtoList);
     }
 }
