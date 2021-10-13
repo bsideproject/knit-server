@@ -1,10 +1,6 @@
 package com.project.knit.controller;
 
-import com.project.knit.dto.res.CommonResponse;
-import com.project.knit.dto.res.ThreadFeaturedResDto;
-import com.project.knit.dto.res.ThreadMostViewedListResDto;
-import com.project.knit.dto.res.ThreadPagingResDto;
-import com.project.knit.dto.res.ThreadRecentChangedResDto;
+import com.project.knit.dto.res.*;
 import com.project.knit.service.S3Service;
 import com.project.knit.service.ThreadService;
 import lombok.RequiredArgsConstructor;
@@ -12,11 +8,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;

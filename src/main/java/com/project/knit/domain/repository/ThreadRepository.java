@@ -1,10 +1,7 @@
 package com.project.knit.domain.repository;
 
-import com.project.knit.domain.entity.Category;
-import com.project.knit.domain.entity.Content;
-import com.project.knit.domain.entity.Tag;
 import com.project.knit.domain.entity.Thread;
-import com.project.knit.domain.entity.User;
+import com.project.knit.domain.entity.*;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 

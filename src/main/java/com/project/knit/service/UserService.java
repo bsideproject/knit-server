@@ -1,20 +1,9 @@
 package com.project.knit.service;
 
 import com.project.knit.config.jwt.JwtTokenProvider;
-import com.project.knit.domain.entity.Content;
-import com.project.knit.domain.entity.ExpiredToken;
-import com.project.knit.domain.entity.Profile;
 import com.project.knit.domain.entity.Thread;
-import com.project.knit.domain.entity.ThreadContributor;
-import com.project.knit.domain.entity.User;
-import com.project.knit.domain.entity.UserToken;
-import com.project.knit.domain.repository.ContentRepository;
-import com.project.knit.domain.repository.ExpiredTokenRepository;
-import com.project.knit.domain.repository.ProfileRepository;
-import com.project.knit.domain.repository.ThreadContributorRepository;
-import com.project.knit.domain.repository.ThreadRepository;
-import com.project.knit.domain.repository.UserRepository;
-import com.project.knit.domain.repository.UserTokenRepository;
+import com.project.knit.domain.entity.*;
+import com.project.knit.domain.repository.*;
 import com.project.knit.dto.req.ProfileUpdateReqDto;
 import com.project.knit.dto.res.*;
 import com.project.knit.service.social.SocialOauth;
@@ -55,6 +44,7 @@ public class UserService {
     private final ThreadContributorRepository threadContributorRepository;
     private final ExpiredTokenRepository expiredTokenRepository;
     private final UserTokenRepository userTokenRepository;
+    private final ThreadLikeRepository threadLikeRepository;
 
     private final RestTemplate restTemplate = new RestTemplate();
 
@@ -374,6 +364,7 @@ public class UserService {
                 }
             });
             res.setContributorList(contributorList);
+            res.setLikeCount(threadLikeRepository.countAllByThreadId(t.getId()));
 
             resDtoList.add(res);
         });

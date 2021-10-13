@@ -22,4 +22,5 @@ public class ThreadResDto {
     private LocalDateTime date;
     private String isFeatured;
     private List<String> contributorList;
+    private Integer likeCount;
 }

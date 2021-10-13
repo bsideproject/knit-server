@@ -12,4 +12,5 @@ public class ThreadShortResDto {
     private String title;
     private String subTitle;
     private String thumbnailUrl;
+    private Integer likeCount;
 }

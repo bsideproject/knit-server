@@ -3,24 +3,9 @@ package com.project.knit.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.project.knit.config.jwt.JwtTokenProvider;
-import com.project.knit.domain.entity.Category;
-import com.project.knit.domain.entity.Content;
-import com.project.knit.domain.entity.Profile;
-import com.project.knit.domain.entity.Reference;
-import com.project.knit.domain.entity.Tag;
 import com.project.knit.domain.entity.Thread;
-import com.project.knit.domain.entity.ThreadContributor;
-import com.project.knit.domain.entity.ThreadLike;
-import com.project.knit.domain.entity.User;
-import com.project.knit.domain.repository.CategoryRepository;
-import com.project.knit.domain.repository.ContentRepository;
-import com.project.knit.domain.repository.ProfileRepository;
-import com.project.knit.domain.repository.ReferenceRepository;
-import com.project.knit.domain.repository.TagRepository;
-import com.project.knit.domain.repository.ThreadContributorRepository;
-import com.project.knit.domain.repository.ThreadLikeRepository;
-import com.project.knit.domain.repository.ThreadRepository;
-import com.project.knit.domain.repository.UserRepository;
+import com.project.knit.domain.entity.*;
+import com.project.knit.domain.repository.*;
 import com.project.knit.dto.req.ThreadCreateReqDto;
 import com.project.knit.dto.req.ThreadLikeReqDto;
 import com.project.knit.dto.req.ThreadUpdateReqDto;
@@ -68,6 +53,7 @@ public class ThreadService {
             shortResDto.setTitle(t.getThreadTitle());
             shortResDto.setSubTitle(t.getThreadSubTitle());
             shortResDto.setThumbnailUrl(t.getThumbnailUrl());
+            shortResDto.setLikeCount(threadLikeRepository.countAllByThreadId(t.getId()));
 
             shortResDtos.add(shortResDto);
         });
@@ -156,6 +142,7 @@ public class ThreadService {
             }
         });
         resDto.setContributorList(contributorList);
+        resDto.setLikeCount(threadLikeRepository.countAllByThreadId(thread.getId()));
 
         thread.addViewCount();
         return CommonResponse.response(StatusCodeEnum.OK.getStatus(), "Thread Found.", resDto);
@@ -398,6 +385,7 @@ public class ThreadService {
             res.setReferences(referenceList);
             res.setDate(t.getCreatedDate());
             res.setIsFeatured(t.getIsFeatured());
+            res.setLikeCount(threadLikeRepository.countAllByThreadId(t.getId()));
 
             resDtoList.add(res);
 
@@ -633,6 +621,7 @@ public class ThreadService {
                 }
             });
             res.setContributorList(contributorList);
+            res.setLikeCount(threadLikeRepository.countAllByThreadId(t.getId()));
 
             threadResList.add(res);
         }
@@ -727,6 +716,7 @@ public class ThreadService {
                 }
             });
             res.setContributorList(contributorList);
+            res.setLikeCount(threadLikeRepository.countAllByThreadId(t.getId()));
 
             threadResList.add(res);
         }
@@ -819,6 +809,7 @@ public class ThreadService {
                 }
             });
             res.setContributorList(contributorList);
+            res.setLikeCount(threadLikeRepository.countAllByThreadId(t.getId()));
 
             threadResList.add(res);
         }
@@ -914,6 +905,7 @@ public class ThreadService {
                     }
                 });
                 res.setContributorList(contributorList);
+                res.setLikeCount(threadLikeRepository.countAllByThreadId(t.getId()));
 
                 threadResList.add(res);
             }

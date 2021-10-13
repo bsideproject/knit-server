@@ -77,6 +77,8 @@ public class Thread extends TimeEntity {
         this.threadSummary = threadSummary;
         this.status = status;
         this.isFeatured = "N";
+        this.likeCount = 0L;
+        this.viewCount = 0L;
     }
 
     public void changeStatus(String status) {
